@@ -1,13 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MyGlobyX</title>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+
+    <!-- App -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker: só registra em PRODUÇÃO -->
+    <script>
+      if ('serviceWorker' in navigator && import.meta.env && import.meta.env.PROD) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then(reg => console.log('SW registrado:', reg))
+            .catch(err => console.error('SW erro:', err));
+        });
+      }
+    </script>
   </body>
 </html>
