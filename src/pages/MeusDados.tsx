@@ -1,13 +1,68 @@
 import React, { useEffect, useState } from "react";
 import { apiGetProfile, apiUpdateProfile, Profile } from "../lib/api";
 
-const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token", "token"];
+const TOKEN_KEYS = [
+  "myglobyx_token",
+  "myglobyx:token",
+  "myglobyx_auth",
+  "myglobyx:auth",
+  "auth",
+  "auth_token",
+  "access_token",
+  "token",
+];
 
 function readToken(): string | null {
-  for (const k of TOKEN_KEYS) {
-    const v = localStorage.getItem(k) || sessionStorage.getItem(k);
-    if (v) return v;
+  const stores = [localStorage, sessionStorage];
+  const jwtRx = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+
+  // 1) tenta chaves conhecidas
+  for (const store of stores) {
+    for (const key of TOKEN_KEYS) {
+      const raw = store.getItem(key);
+      if (!raw) continue;
+
+      // se veio algo tipo "Bearer xxx"
+      const trimmed = raw.trim().replace(/^Bearer\s+/i, "");
+      if (jwtRx.test(trimmed)) return trimmed;
+
+      // se veio JSON { token: "...", access_token: "..." }
+      try {
+        const obj = JSON.parse(raw);
+        const cand =
+          obj?.token?.toString?.() ||
+          obj?.access_token?.toString?.() ||
+          obj?.value?.toString?.();
+        if (cand && jwtRx.test(cand)) return cand;
+      } catch {
+        /* ignore parse */
+      }
+    }
   }
+
+  // 2) varre tudo (fallback)
+  for (const store of stores) {
+    for (let i = 0; i < store.length; i++) {
+      const k = store.key(i)!;
+      const raw = store.getItem(k);
+      if (!raw) continue;
+
+      const trimmed = raw.trim().replace(/^Bearer\s+/i, "");
+      if (jwtRx.test(trimmed)) return trimmed;
+
+      try {
+        const obj = JSON.parse(raw);
+        const cand =
+          obj?.token?.toString?.() ||
+          obj?.access_token?.toString?.() ||
+          obj?.value?.toString?.();
+        if (cand && jwtRx.test(cand)) return cand;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
   return null;
 }
 
