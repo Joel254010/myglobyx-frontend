@@ -24,6 +24,7 @@ export default function MundoDigital() {
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
           <nav className="nav">
             <Link className="link" to="/app/meus-produtos">Meus Produtos</Link>
+            <Link className="link" to="/app/meus-dados">Meus Dados</Link> {/* ✅ NOVO */}
             <Link className="link" to="/suporte">Suporte</Link>
             <button className="btn btn--outline" onClick={handleLogout}>Sair</button>
           </nav>

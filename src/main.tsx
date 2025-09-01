@@ -15,6 +15,7 @@ const MeusProdutos = lazy(() => import("./pages/MeusProdutos"));
 const Suporte = lazy(() => import("./pages/Suporte"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
+const MeusDados = lazy(() => import("./pages/MeusDados")); // ✅ novo
 
 /* Scroll to top */
 function ScrollToTop() {
@@ -47,7 +48,7 @@ function NotFound() {
   );
 }
 
-/* ErrorBoundary (só mostra algo se houver erro real) */
+/* ErrorBoundary */
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean }
@@ -98,6 +99,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route element={<PrivateRoute />}>
               <Route path="/app" element={<MundoDigital />} />
               <Route path="/app/meus-produtos" element={<MeusProdutos />} />
+              <Route path="/app/meus-dados" element={<MeusDados />} /> {/* ✅ novo */}
             </Route>
 
             {/* 404 */}

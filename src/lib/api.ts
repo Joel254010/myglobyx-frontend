@@ -60,4 +60,37 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
+export type Address = {
+  cep?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+};
+
+export type Profile = {
+  name: string;
+  email: string;
+  phone?: string;
+  birthdate?: string; // YYYY-MM-DD
+  document?: string;  // CPF
+  address?: Address;
+};
+
+export async function apiGetProfile(token: string) {
+  const { data } = await api.get<{ profile: Profile }>("/api/profile/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data.profile;
+}
+
+export async function apiUpdateProfile(token: string, payload: Profile) {
+  const { data } = await api.put<{ profile: Profile }>("/api/profile/me", payload, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data.profile;
+}
+
 export default api;
