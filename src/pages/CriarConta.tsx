@@ -2,9 +2,15 @@ import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiSignup } from "../lib/api";
 
-// helpers locais
-const TOKEN_KEY = "myglobyx_token";
-const setTokenLocal = (t: string) => localStorage.setItem(TOKEN_KEY, t);
+// === auth storage helpers (padrão único p/ toda app)
+const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"]; // principal + alias
+const USER_KEY = "myglobyx:user";
+
+function saveAuth(token: string, user: { name: string; email: string }) {
+  localStorage.setItem(TOKEN_KEYS[0], token);                // principal
+  localStorage.setItem(USER_KEY, JSON.stringify(user));      // user
+  localStorage.setItem(TOKEN_KEYS[1], token);                // alias compat
+}
 
 const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
   if (err instanceof Error) return err.message;
@@ -52,14 +58,15 @@ export default function CriarConta() {
 
     try {
       setLoading(true);
-      const res = await apiSignup(nome, email, senha); // { user, token }
-      setTokenLocal(res.token);
+      const { token, user } = await apiSignup(nome, email, senha); // { token, user }
+      saveAuth(token, user);
       setMsg({ type: "ok", text: "Conta criada! Redirecionando…" });
       nav("/app", { replace: true });
     } catch (err) {
       const codeOrMsg = getApiErrorMessageLocal(err);
       const map: Record<string, string> = {
         email_in_use: "Este e-mail já está cadastrado.",
+        network_error: "Falha de rede. Verifique sua conexão e tente novamente.",
       };
       setMsg({ type: "err", text: map[codeOrMsg] || codeOrMsg || "Não foi possível criar sua conta. Tente novamente." });
     } finally {
@@ -195,11 +202,6 @@ export default function CriarConta() {
       <footer className="footer">
         <div className="container footer__inner">
           <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
-          <div className="footer__links">
-            <Link to="/termos">Termos</Link>
-            <Link to="/privacidade">Privacidade</Link>
-            <Link to="/suporte">Suporte</Link>
-          </div>
         </div>
       </footer>
     </div>

@@ -2,8 +2,23 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiLogin } from "../lib/api";
 
-const TOKEN_KEY = "myglobyx_token";
-const setTokenLocal = (t: string) => localStorage.setItem(TOKEN_KEY, t);
+const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"]; // principal + alias
+const USER_KEY = "myglobyx:user";
+
+function hasTokenSaved() {
+  for (const k of TOKEN_KEYS) {
+    if (localStorage.getItem(k) || sessionStorage.getItem(k)) return true;
+  }
+  return false;
+}
+
+function saveAuth(token: string, user: { name: string; email: string }) {
+  // padrão principal
+  localStorage.setItem(TOKEN_KEYS[0], token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  // alias de compatibilidade (se algo da app ler esse nome)
+  localStorage.setItem(TOKEN_KEYS[1], token);
+}
 
 const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
   if (err instanceof Error) return err.message;
@@ -20,7 +35,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(TOKEN_KEY)) {
+    if (hasTokenSaved()) {
       nav("/app", { replace: true });
     }
   }, [nav]);
@@ -31,7 +46,7 @@ export default function Login() {
     e.preventDefault();
     setMsg(null);
 
-   if (!validarEmail(email)) {
+    if (!validarEmail(email)) {
       return setMsg({ type: "err", text: "Digite um e-mail válido." });
     }
     if (senha.length < 6) {
@@ -40,8 +55,8 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const res = await apiLogin(email, senha); // { token }
-      setTokenLocal(res.token);
+      const { token, user } = await apiLogin(email, senha); // { token, user }
+      saveAuth(token, user);
       setMsg({ type: "ok", text: "Login realizado! Redirecionando…" });
       nav("/app", { replace: true });
     } catch (err) {
@@ -49,6 +64,7 @@ export default function Login() {
       const map: Record<string, string> = {
         invalid_credentials: "E-mail ou senha inválidos.",
         unauthorized: "Sua sessão expirou. Entre novamente.",
+        network_error: "Falha de rede. Verifique sua conexão e tente novamente.",
       };
       setMsg({ type: "err", text: map[code] || code || "Não foi possível entrar. Tente novamente." });
     } finally {
@@ -118,7 +134,7 @@ export default function Login() {
                 </div>
                 <div className="row-between">
                   <label className="check">
-                    <input type="checkbox" /> Lembrar de mim
+                    <input type="checkbox" disabled /> Lembrar de mim
                   </label>
                   <a className="link" href="#recuperar">Esqueci a senha</a>
                 </div>
