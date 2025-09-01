@@ -30,8 +30,9 @@ const depoimentos: Depo[] = [
     role: "Assinante Conteúdos Premium",
     text:
       "O suporte foi impecável. Valeu cada centavo! Já indiquei para dois amigos.",
+    // ✅ foto feminina
     avatar:
-      "https://images.unsplash.com/photo-1521230263592-909e6832afe9?q=80&w=256&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1597466765990-64ad1c35dafc?q=80&w=256&auto=format&fit=crop",
   },
 ];
 
@@ -247,7 +248,9 @@ export default function Home() {
                 onError={(e) => handleAvatarError(e, d.name, 128)}
               />
               <div className="depo__body">
-                <div className="stars">★★★★★</div>
+                <div className="stars" aria-label="Avaliação cinco estrelas">
+                  ★★★★★
+                </div>
                 <p className="depo__text">“{d.text}”</p>
                 <div className="depo__meta">
                   <strong>{d.name}</strong>
