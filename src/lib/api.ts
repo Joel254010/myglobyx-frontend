@@ -1,20 +1,44 @@
 // src/lib/api.ts
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 
-const api = axios.create({
-  baseURL: "http://127.0.0.1:4000", // chama a API direto, sem proxy do Vite
+// Lê do Netlify (Vite) e cai para localhost APENAS em dev
+const RAW_API_URL = (import.meta as any).env?.VITE_API_URL?.trim?.();
+const isBrowser = typeof window !== "undefined";
+const isLocal =
+  isBrowser &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+export const BASE_URL = RAW_API_URL || (isLocal ? "http://127.0.0.1:5000" : ""); // "" = mesma origem se um dia usar proxy
+
+const api: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 10_000,
   withCredentials: false,
 });
 
+// Helper opcional para setar/remover Bearer no cliente global
+export function setAuthToken(token?: string | null) {
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common["Authorization"];
+  }
+}
+
 api.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {
-    if (err.code === "ECONNABORTED" || err.message === "Network Error") {
+    // timeout/rede
+    if (
+      err.code === "ECONNABORTED" ||
+      err.code === "ERR_NETWORK" ||
+      err.message?.toLowerCase().includes("network")
+    ) {
       return Promise.reject(new Error("network_error"));
     }
-    const code = err.response?.data?.error as string | undefined;
+    const code = (err.response?.data as any)?.error as string | undefined;
     if (code) return Promise.reject(new Error(code));
     const http = err.response?.status ? `HTTP_${err.response.status}` : "unknown_error";
     return Promise.reject(new Error(http));
