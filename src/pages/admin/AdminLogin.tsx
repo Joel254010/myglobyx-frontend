@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiLogin } from "../../lib/api";
+import { getAdminGrants } from "../../lib/adminApi"; // ✅ checagem de permissão pós-login
 
 const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
@@ -15,7 +16,8 @@ export default function AdminLogin() {
   const nav = useNavigate();
   const location = useLocation();
   const redirectTo =
-    (location.state as any)?.from?.pathname && String((location.state as any).from.pathname).startsWith("/admin")
+    (location.state as any)?.from?.pathname &&
+    String((location.state as any).from.pathname).startsWith("/admin")
       ? (location.state as any).from.pathname
       : "/admin";
 
@@ -36,12 +38,25 @@ export default function AdminLogin() {
 
     try {
       setLoading(true);
-      // Usa o MESMO endpoint de login, mas salva no slot exclusivo do admin
-      const { token } = await apiLogin(email, senha);
-      localStorage.setItem(ADMIN_TOKEN_KEY, token);
-      setMsg({ type: "ok", text: "Login do admin realizado!" });
 
-      // Redireciona ao painel
+      // 1) Login normal (mesmo endpoint dos clientes)
+      const { token } = await apiLogin(email, senha);
+
+      // 2) Guardar token no slot do admin
+      localStorage.setItem(ADMIN_TOKEN_KEY, token);
+
+      // 3) Validar permissão de admin no backend
+      const grants = await getAdminGrants(token); // ex.: { isAdmin: true } ou { roles: ['admin'] }
+      const isAdmin =
+        (grants && typeof grants.isAdmin === "boolean" && grants.isAdmin) ||
+        (Array.isArray((grants as any)?.roles) && (grants as any).roles.includes("admin"));
+
+      if (!isAdmin) {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        throw new Error("unauthorized");
+      }
+
+      setMsg({ type: "ok", text: "Login do admin realizado!" });
       nav(redirectTo, { replace: true });
     } catch (err) {
       const code = getErrMessage(err);
