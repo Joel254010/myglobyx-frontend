@@ -1,15 +1,38 @@
 // src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
-// Lê do Netlify (Vite) e cai para localhost APENAS em dev
-const RAW_API_URL = (import.meta as any).env?.VITE_API_URL?.trim?.();
+/**
+ * Prioridade da base URL:
+ * 1) VITE_API_URL (Netlify/.env.local)
+ * 2) localhost:4000 quando rodando local
+ * 3) backend de produção (Render) como fallback
+ */
+const RAW_API_URL = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
+
 const isBrowser = typeof window !== "undefined";
-const isLocal =
+const isLocalhost =
   isBrowser &&
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
-export const BASE_URL = RAW_API_URL || (isLocal ? "http://127.0.0.1:5000" : ""); // "" = mesma origem se um dia usar proxy
+const DEFAULT_LOCAL = "http://127.0.0.1:4000";
+const DEFAULT_PROD = "https://backend-myglobyx.onrender.com";
+
+export const BASE_URL = String(
+  RAW_API_URL && RAW_API_URL.trim()
+    ? RAW_API_URL.trim()
+    : isLocalhost
+    ? DEFAULT_LOCAL
+    : DEFAULT_PROD
+).replace(/\/+$/, ""); // remove trailing slash
+
+if (!RAW_API_URL) {
+  // Ajuda em DX: avisa se está usando fallback
+  // eslint-disable-next-line no-console
+  console.warn(
+    `[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`
+  );
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -27,6 +50,7 @@ export function setAuthToken(token?: string | null) {
   }
 }
 
+// Interceptor de erros → mapeia para códigos simples
 api.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {

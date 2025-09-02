@@ -10,15 +10,38 @@ export default function AdminRoute() {
   const location = useLocation();
 
   React.useEffect(() => {
-    // se não tem token do admin, manda para login do admin
     const t = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (!t) { setOk(false); return; }
 
-    let live = true;
-    adminPing()
-      .then(() => live && setOk(true))
-      .catch(() => live && setOk(false));
-    return () => { live = false; };
+    let active = true;
+
+    (async () => {
+      try {
+        await adminPing(); // faz GET /api/admin/ping com Bearer do localStorage
+        if (!active) return;
+        setOk(true);
+      } catch (err: any) {
+        if (!active) return;
+        const code = String(err?.message || "");
+
+        // Se for claramente falta de permissão/token, limpamos o token
+        const shouldClear =
+          code.includes("missing_admin_token") ||
+          code.includes("unauthorized") ||
+          code.includes("forbidden") ||
+          code.includes("invalid_token") ||
+          code.includes("token_expired") ||
+          code.includes("HTTP_401") ||
+          code.includes("HTTP_403");
+
+        if (shouldClear) {
+          localStorage.removeItem(ADMIN_TOKEN_KEY);
+        }
+        setOk(false);
+      }
+    })();
+
+    return () => { active = false; };
   }, []);
 
   if (ok === null) {
@@ -26,7 +49,6 @@ export default function AdminRoute() {
   }
 
   if (ok === false) {
-    // ❗️ login do admin é separado do login do usuário
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }
 
