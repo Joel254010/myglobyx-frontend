@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "./style.css";
 
 import PrivateRoute from "./routes/PrivateRoute";
+import AdminRoute from "./routes/AdminRoute"; // ✅ novo (guard do admin)
 
 /* Páginas (lazy) */
 const Home = lazy(() => import("./pages/Home"));
@@ -16,6 +17,12 @@ const Suporte = lazy(() => import("./pages/Suporte"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const MeusDados = lazy(() => import("./pages/MeusDados")); // ✅ novo
+
+/* Admin (lazy) */
+const AdminLayout    = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminProducts  = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminGrants    = lazy(() => import("./pages/admin/AdminGrants"));
+const AdminUsers     = lazy(() => import("./pages/admin/AdminUsers")); // existe no seu projeto
 
 /* Scroll to top */
 function ScrollToTop() {
@@ -99,7 +106,17 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route element={<PrivateRoute />}>
               <Route path="/app" element={<MundoDigital />} />
               <Route path="/app/meus-produtos" element={<MeusProdutos />} />
-              <Route path="/app/meus-dados" element={<MeusDados />} /> {/* ✅ novo */}
+              <Route path="/app/meus-dados" element={<MeusDados />} />
+            </Route>
+
+            {/* admin */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminProducts />} />
+                <Route path="produtos" element={<AdminProducts />} />
+                <Route path="liberacoes" element={<AdminGrants />} />
+                <Route path="usuarios" element={<AdminUsers />} />
+              </Route>
             </Route>
 
             {/* 404 */}
