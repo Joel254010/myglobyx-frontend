@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "./style.css";
 
 import PrivateRoute from "./routes/PrivateRoute";
-import AdminRoute from "./routes/AdminRoute"; // ✅ novo (guard do admin)
+import AdminRoute from "./routes/AdminRoute"; // ✅ guard do admin
 
 /* Páginas (lazy) */
 const Home = lazy(() => import("./pages/Home"));
@@ -16,20 +16,19 @@ const MeusProdutos = lazy(() => import("./pages/MeusProdutos"));
 const Suporte = lazy(() => import("./pages/Suporte"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
-const MeusDados = lazy(() => import("./pages/MeusDados")); // ✅ novo
+const MeusDados = lazy(() => import("./pages/MeusDados"));
 
 /* Admin (lazy) */
-const AdminLayout    = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminProducts  = lazy(() => import("./pages/admin/AdminProducts"));
-const AdminGrants    = lazy(() => import("./pages/admin/AdminGrants"));
-const AdminUsers     = lazy(() => import("./pages/admin/AdminUsers")); // existe no seu projeto
+const AdminLayout   = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminGrants   = lazy(() => import("./pages/admin/AdminGrants"));
+const AdminUsers    = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminLogin    = lazy(() => import("./pages/admin/AdminLogin")); // ✅ novo
 
 /* Scroll to top */
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 
@@ -64,9 +63,7 @@ class ErrorBoundary extends React.Component<
     super(props);
     this.state = { hasError: false };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
+  static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: any, info: any) {
     console.error("❌ UI error boundary:", error, info);
   }
@@ -97,19 +94,21 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route path="/como-funciona" element={<ComoFunciona />} />
             <Route path="/login" element={<Login />} />
             <Route path="/criar-conta" element={<CriarConta />} />
-
             <Route path="/suporte" element={<Suporte />} />
             <Route path="/termos" element={<Termos />} />
             <Route path="/privacidade" element={<Privacidade />} />
 
-            {/* área logada */}
+            {/* login do admin (sessão separada) */}
+            <Route path="/admin/login" element={<AdminLogin />} /> {/* ✅ novo */}
+
+            {/* área logada (cliente) */}
             <Route element={<PrivateRoute />}>
               <Route path="/app" element={<MundoDigital />} />
               <Route path="/app/meus-produtos" element={<MeusProdutos />} />
               <Route path="/app/meus-dados" element={<MeusDados />} />
             </Route>
 
-            {/* admin */}
+            {/* admin protegido */}
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminProducts />} />
