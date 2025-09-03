@@ -1,4 +1,3 @@
-// src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 /**
@@ -27,7 +26,6 @@ export const BASE_URL = String(
 ).replace(/\/+$/, ""); // remove trailing slash
 
 if (!RAW_API_URL) {
-  // Ajuda em DX: avisa se está usando fallback
   // eslint-disable-next-line no-console
   console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
 }
@@ -35,24 +33,18 @@ if (!RAW_API_URL) {
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 30_000, // ↑ timeout maior para evitar cancel em cold start do Render
+  timeout: 60_000, // ⬅️ 60s para evitar cancel em cold start do Render
   withCredentials: false,
 });
 
-// Helper opcional para setar/remover Bearer no cliente global
 export function setAuthToken(token?: string | null) {
-  if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common["Authorization"];
-  }
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  else delete api.defaults.headers.common["Authorization"];
 }
 
-// Interceptor de erros → mapeia para códigos simples
 api.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {
-    // timeout/rede
     if (
       err.code === "ECONNABORTED" ||
       err.code === "ERR_NETWORK" ||
@@ -82,7 +74,7 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
-// 🔥 Aquece o backend e verifica disponibilidade (útil antes de logar)
+// 🔥 aquece/verifica o backend
 export async function apiPingHealth() {
   return api.get("/health");
 }
@@ -101,8 +93,8 @@ export type Profile = {
   name: string;
   email: string;
   phone?: string;
-  birthdate?: string; // YYYY-MM-DD
-  document?: string;  // CPF
+  birthdate?: string;
+  document?: string;
   address?: Address;
 };
 

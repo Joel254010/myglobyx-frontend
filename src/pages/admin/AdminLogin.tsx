@@ -1,8 +1,7 @@
-// src/pages/admin/AdminLogin.tsx
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiLogin, apiPingHealth } from "../../lib/api";
-import { getAdminGrants } from "../../lib/adminApi"; // checagem de permissão pós-login
+import { getAdminGrants } from "../../lib/adminApi";
 
 const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
@@ -29,10 +28,14 @@ export default function AdminLogin() {
 
   const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
-  // 🔥 Aquece o backend (evita timeout no primeiro acesso do Render)
+  // Warm-up no mount (acorda Render)
   React.useEffect(() => {
     apiPingHealth().catch(() => {});
   }, []);
+
+  async function tryLoginOnce(em: string, pw: string) {
+    return apiLogin(em, pw);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,26 +46,35 @@ export default function AdminLogin() {
 
     try {
       setLoading(true);
+      const em = email.trim().toLowerCase();
 
-      // 1) Login normal (mesmo endpoint dos clientes) com retry em caso de cold start/timeout
-      const normalizedEmail = email.trim().toLowerCase();
+      // tentativa 1
       let data;
       try {
-        data = await apiLogin(normalizedEmail, senha);
+        data = await tryLoginOnce(em, senha);
       } catch (err) {
-        if (getErrMessage(err) === "network_error") {
+        if (getErrMessage(err) !== "network_error") throw err;
+
+        // warm-up + backoff 500ms e tenta de novo
+        await apiPingHealth().catch(() => {});
+        await new Promise(r => setTimeout(r, 500));
+
+        // tentativa 2
+        try {
+          data = await tryLoginOnce(em, senha);
+        } catch (err2) {
+          if (getErrMessage(err2) !== "network_error") throw err2;
+
+          // último backoff e última tentativa (3ª)
           await apiPingHealth().catch(() => {});
-          data = await apiLogin(normalizedEmail, senha);
-        } else {
-          throw err;
+          await new Promise(r => setTimeout(r, 1000));
+          data = await tryLoginOnce(em, senha);
         }
       }
 
-      // 2) Guardar token no slot do admin
       const { token } = data;
       localStorage.setItem(ADMIN_TOKEN_KEY, token);
 
-      // 3) Validar permissão de admin no backend
       const grants = await getAdminGrants(token);
       const isAdmin =
         Boolean((grants as any)?.isAdmin) ||
@@ -80,7 +92,7 @@ export default function AdminLogin() {
       const map: Record<string, string> = {
         invalid_credentials: "E-mail ou senha inválidos.",
         unauthorized: "Acesso negado.",
-        network_error: "Servidor acordando… tente novamente.",
+        network_error: "Servidor acordando... tente novamente.",
       };
       setMsg({ type: "err", text: map[code] || code || "Não foi possível entrar como admin." });
     } finally {
@@ -90,7 +102,6 @@ export default function AdminLogin() {
 
   return (
     <div className="page">
-      {/* Header simples */}
       <header className="header">
         <div className="container header__inner">
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
