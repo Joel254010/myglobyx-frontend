@@ -1,8 +1,8 @@
 // src/pages/admin/AdminLogin.tsx
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { apiLogin } from "../../lib/api";
-import { getAdminGrants } from "../../lib/adminApi"; // ✅ checagem de permissão pós-login
+import { apiLogin, apiPingHealth } from "../../lib/api";
+import { getAdminGrants } from "../../lib/adminApi"; // checagem de permissão pós-login
 
 const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
@@ -29,6 +29,11 @@ export default function AdminLogin() {
 
   const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
+  // 🔥 Aquece o backend (evita timeout no primeiro acesso do Render)
+  React.useEffect(() => {
+    apiPingHealth().catch(() => {});
+  }, []);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg(null);
@@ -39,16 +44,28 @@ export default function AdminLogin() {
     try {
       setLoading(true);
 
-      // 1) Login normal (mesmo endpoint dos clientes)
-      const { token } = await apiLogin(email, senha);
+      // 1) Login normal (mesmo endpoint dos clientes) com retry em caso de cold start/timeout
+      const normalizedEmail = email.trim().toLowerCase();
+      let data;
+      try {
+        data = await apiLogin(normalizedEmail, senha);
+      } catch (err) {
+        if (getErrMessage(err) === "network_error") {
+          await apiPingHealth().catch(() => {});
+          data = await apiLogin(normalizedEmail, senha);
+        } else {
+          throw err;
+        }
+      }
 
       // 2) Guardar token no slot do admin
+      const { token } = data;
       localStorage.setItem(ADMIN_TOKEN_KEY, token);
 
       // 3) Validar permissão de admin no backend
-      const grants = await getAdminGrants(token); // ex.: { isAdmin: true } ou { roles: ['admin'] }
+      const grants = await getAdminGrants(token);
       const isAdmin =
-        (grants && typeof grants.isAdmin === "boolean" && grants.isAdmin) ||
+        Boolean((grants as any)?.isAdmin) ||
         (Array.isArray((grants as any)?.roles) && (grants as any).roles.includes("admin"));
 
       if (!isAdmin) {
@@ -63,6 +80,7 @@ export default function AdminLogin() {
       const map: Record<string, string> = {
         invalid_credentials: "E-mail ou senha inválidos.",
         unauthorized: "Acesso negado.",
+        network_error: "Servidor acordando… tente novamente.",
       };
       setMsg({ type: "err", text: map[code] || code || "Não foi possível entrar como admin." });
     } finally {

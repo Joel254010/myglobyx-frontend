@@ -29,15 +29,13 @@ export const BASE_URL = String(
 if (!RAW_API_URL) {
   // Ajuda em DX: avisa se está usando fallback
   // eslint-disable-next-line no-console
-  console.warn(
-    `[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`
-  );
+  console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
 }
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 10_000,
+  timeout: 30_000, // ↑ timeout maior para evitar cancel em cold start do Render
   withCredentials: false,
 });
 
@@ -82,6 +80,11 @@ export async function apiSignup(name: string, email: string, password: string) {
 export async function apiLogin(email: string, password: string) {
   const { data } = await api.post<AuthResponse>("/auth/login", { email, password });
   return data;
+}
+
+// 🔥 Aquece o backend e verifica disponibilidade (útil antes de logar)
+export async function apiPingHealth() {
+  return api.get("/health");
 }
 
 export type Address = {
