@@ -33,7 +33,7 @@ if (!RAW_API_URL) {
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 60_000, // ⬅️ 60s para evitar cancel em cold start do Render
+  timeout: 60_000, // 60s para evitar cancel em cold start do Render
   withCredentials: false,
 });
 
@@ -64,8 +64,18 @@ export type AuthResponse = {
   user: { id?: string; name: string; email: string };
 };
 
-export async function apiSignup(name: string, email: string, password: string) {
-  const { data } = await api.post<AuthResponse>("/auth/signup", { name, email, password });
+/** Algumas APIs de signup retornam só {message}, outras {token,user}. Flexibilizamos. */
+export type SignupResponse = Partial<AuthResponse> & { message?: string };
+
+export async function apiSignup(
+  name: string,
+  email: string,
+  password: string,
+  phone?: string
+): Promise<SignupResponse> {
+  const payload: any = { name, email, password };
+  if (phone) payload.phone = phone; // envia telefone (somente dígitos)
+  const { data } = await api.post<SignupResponse>("/auth/signup", payload);
   return data;
 }
 

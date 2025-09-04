@@ -2,21 +2,30 @@ import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiSignup } from "../lib/api";
 
-// === auth storage helpers (padrão único p/ toda app)
-const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"]; // principal + alias
+// === helpers de storage (mantidos para compat, mas NÃO faremos auto-login após signup)
+const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 const USER_KEY = "myglobyx:user";
 
-function saveAuth(token: string, user: { name: string; email: string }) {
-  localStorage.setItem(TOKEN_KEYS[0], token);                // principal
-  localStorage.setItem(USER_KEY, JSON.stringify(user));      // user
-  localStorage.setItem(TOKEN_KEYS[1], token);                // alias compat
-}
-
-const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
+function getApiErrorMessageLocal(err: unknown, fallback = "Erro inesperado.") {
   if (err instanceof Error) return err.message;
   const e = err as any;
   return e?.response?.data?.error || e?.message || fallback;
-};
+}
+
+// máscara BR simples: (DD) 9XXXX-XXXX ou (DD) XXXX-XXXX
+function maskPhoneBR(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11); // máx 11 dígitos
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
+}
+
+function isValidBRPhone(v: string) {
+  const d = v.replace(/\D/g, "");
+  // 10 dígitos (fixo) ou 11 dígitos (celular) — validação básica
+  return d.length === 10 || d.length === 11;
+}
 
 function calcStrength(pwd: string) {
   let score = 0;
@@ -36,6 +45,7 @@ export default function CriarConta() {
   const nav = useNavigate();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
   const [confirm, setConfirm] = useState("");
   const [mostrar, setMostrar] = useState(false);
@@ -46,22 +56,39 @@ export default function CriarConta() {
   const strength = useMemo(() => calcStrength(senha), [senha]);
   const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
+  function onPhoneChange(raw: string) {
+    setTelefone(maskPhoneBR(raw));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg(null);
 
+    const phoneDigits = telefone.replace(/\D/g, "");
+
     if (!nome.trim()) return setMsg({ type: "err", text: "Informe seu nome." });
     if (!validarEmail(email)) return setMsg({ type: "err", text: "Digite um e-mail válido." });
+    if (!isValidBRPhone(telefone)) return setMsg({ type: "err", text: "Informe um telefone válido (DDD + número)." });
     if (senha.length < 6) return setMsg({ type: "err", text: "A senha precisa ter pelo menos 6 caracteres." });
     if (senha !== confirm) return setMsg({ type: "err", text: "A confirmação de senha não confere." });
     if (!aceite) return setMsg({ type: "err", text: "É necessário aceitar os Termos para continuar." });
 
     try {
       setLoading(true);
-      const { token, user } = await apiSignup(nome, email, senha); // { token, user }
-      saveAuth(token, user);
-      setMsg({ type: "ok", text: "Conta criada! Redirecionando…" });
-      nav("/app", { replace: true });
+      // Agora enviamos também o telefone. O backend pode salvar como digits.
+      await apiSignup(nome, email, senha, phoneDigits);
+
+      // Não fazemos auto-login: mostramos instrução para verificar o e-mail.
+      setMsg({
+        type: "ok",
+        text:
+          "Conta criada! Enviamos um e-mail de confirmação. Verifique sua caixa de entrada (e Spam/Promoções).",
+      });
+
+      // Opcional: redirecionar ao login após alguns segundos
+      setTimeout(() => {
+        nav("/login?possignup=1", { replace: true });
+      }, 1500);
     } catch (err) {
       const codeOrMsg = getApiErrorMessageLocal(err);
       const map: Record<string, string> = {
@@ -125,6 +152,21 @@ export default function CriarConta() {
                   autoComplete="email"
                   required
                 />
+              </div>
+
+              <div className="form-row">
+                <label className="label">Telefone (com DDD)</label>
+                <input
+                  className="input"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="(11) 91234-5678"
+                  value={telefone}
+                  onChange={(e) => onPhoneChange(e.target.value)}
+                  autoComplete="tel"
+                  required
+                />
+                <small className="muted">Usaremos para suporte e contato da compra.</small>
               </div>
 
               <div className="form-row">
