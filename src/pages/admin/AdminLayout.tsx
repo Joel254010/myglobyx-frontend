@@ -48,7 +48,7 @@ export default function AdminLayout() {
           <nav className="nav" style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Link className="link" to="/admin/produtos">Produtos</Link>
             <Link className="link" to="/admin/liberacoes">Liberações</Link>
-            <Link className="link" to="/app/meus-produtos">Área do cliente</Link>
+            <Link className="link" to="/admin/usuarios">Usuários</Link>
             {adminEmail && (
               <span className="muted small" title={adminEmail} style={{ opacity: 0.8 }}>
                 {adminEmail}
