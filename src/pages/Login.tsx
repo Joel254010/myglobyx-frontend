@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { apiLogin } from "../lib/api";
 
 const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"]; // principal + alias
@@ -21,24 +21,54 @@ function saveAuth(token: string, user: { name: string; email: string }) {
 }
 
 const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
-  if (err instanceof Error) return err.message;
+  // Normaliza alguns formatos comuns que o axios/fetch podem retornar
   const e = err as any;
-  return e?.response?.data?.error || e?.message || fallback;
+
+  // 403 explícito do backend (exigindo verificação)
+  if (e?.response?.status === 403) return "not_verified";
+
+  // mensagens que podem vir no payload
+  const code = e?.response?.data?.error || e?.message;
+  if (!code) return fallback;
+
+  // normalizações
+  const norm = String(code).toLowerCase();
+  if (norm.includes("verific")) return "not_verified"; // "E-mail não verificado", etc.
+  if (norm.includes("invalid_credentials")) return "invalid_credentials";
+  if (norm.includes("unauthorized")) return "unauthorized";
+  if (norm.includes("network")) return "network_error";
+
+  return code || fallback;
 };
 
 export default function Login() {
   const nav = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrar, setMostrar] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Redireciona se já tiver token salvo
   useEffect(() => {
     if (hasTokenSaved()) {
       nav("/app", { replace: true });
     }
   }, [nav]);
+
+  // Exibe aviso quando vier de /api/auth/verify → /login?verificado=1
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.get("verificado") === "1") {
+      setMsg({ type: "ok", text: "E-mail verificado com sucesso! Faça login para continuar." });
+      // opcional: limpar o query param (mantém UI limpa após o primeiro render)
+      const url = new URL(window.location.href);
+      url.searchParams.delete("verificado");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [location.search]);
 
   const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
@@ -65,8 +95,10 @@ export default function Login() {
         invalid_credentials: "E-mail ou senha inválidos.",
         unauthorized: "Sua sessão expirou. Entre novamente.",
         network_error: "Falha de rede. Verifique sua conexão e tente novamente.",
+        not_verified:
+          "Confirme seu e-mail para acessar. Enviamos um link de verificação para sua caixa de entrada.",
       };
-      setMsg({ type: "err", text: map[code] || code || "Não foi possível entrar. Tente novamente." });
+      setMsg({ type: "err", text: map[code] || String(code) || "Não foi possível entrar. Tente novamente." });
     } finally {
       setLoading(false);
     }
@@ -149,6 +181,14 @@ export default function Login() {
               <p className="muted small" style={{ textAlign: "center", marginTop: 12 }}>
                 Não tem conta? <Link className="link" to="/criar-conta">Crie agora</Link>
               </p>
+
+              {/* Dica discreta para casos de não-verificado */}
+              {msg?.type === "err" && msg.text.toLowerCase().includes("verific") && email && (
+                <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
+                  Verifique a pasta de <strong>Spam</strong> ou <strong>Promoções</strong>.{" "}
+                  Se precisar reenviar o e-mail, tente novamente em alguns minutos.
+                </p>
+              )}
             </form>
           </div>
         </div>
