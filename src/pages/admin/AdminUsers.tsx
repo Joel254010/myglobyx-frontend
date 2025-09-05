@@ -1,3 +1,4 @@
+// src/pages/admin/AdminUsers.tsx
 import React from "react";
 import api from "../../lib/api";
 
@@ -42,12 +43,6 @@ function fmtDate(d?: string | Date) {
 }
 
 export default function AdminUsers() {
-  // criação provisória (mantido)
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [pass, setPass] = React.useState("");
-
-  // listagem
   const [data, setData] = React.useState<ListResp | null>(null);
   const [page, setPage] = React.useState(1);
   const [limit] = React.useState(25);
@@ -64,8 +59,6 @@ export default function AdminUsers() {
     data?.limit && data?.total
       ? Math.max(1, Math.ceil((data.total as number) / (data.limit as number)))
       : Math.max(1, Math.ceil(total / limit));
-  const isFirstPage = page <= 1;
-  const isLastPage = page >= totalPages;
 
   async function loadUsers(p = page) {
     setLoading(true);
@@ -78,7 +71,7 @@ export default function AdminUsers() {
       setData(res.data);
       setPage(res.data.page || p);
     } catch (e: any) {
-      setMsg(e?.response?.data?.error || e?.message || "Falha ao carregar usuários.");
+      setMsg(e?.message || "Falha ao carregar usuários.");
     } finally {
       setLoading(false);
     }
@@ -89,80 +82,24 @@ export default function AdminUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setMsg(null);
-    if (!name || !email || pass.length < 6) {
-      setMsg("Preencha nome, e-mail e senha (min. 6).");
-      return;
-    }
-    try {
-      await api.post("/auth/signup", { name, email, password: pass });
-      setMsg("Usuário criado. Enviamos e-mail de confirmação (ou log no console, em dev).");
-      setName("");
-      setEmail("");
-      setPass("");
-      loadUsers(1);
-    } catch (e: any) {
-      setMsg(e?.response?.data?.error || e?.message || "Erro ao criar usuário.");
-    }
-  }
-
   return (
     <div>
       <h1>Usuários</h1>
 
       {msg && (
-        <div className="alert alert--ok" style={{ marginBottom: 12 }}>
+        <div className="alert alert--err" style={{ marginBottom: 12 }}>
           {msg}
         </div>
       )}
 
-      {/* Criar novo (provisório) */}
-      <form onSubmit={onCreate} className="card" style={{ padding: 12, marginBottom: 16 }}>
-        <h3>Novo usuário (provisório)</h3>
-        <div className="form-grid">
-          <div className="field field--full">
-            <label>Nome</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>E-mail</label>
-            <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Senha</label>
-            <input
-              className="input"
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="actions">
-          <button className="btn btn--primary" disabled={loading}>
-            {loading ? "Criando…" : "Criar"}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => loadUsers(page)}
-            disabled={loading}
-            style={{ marginLeft: 8 }}
-          >
-            {loading ? "Atualizando…" : "Atualizar lista"}
-          </button>
-        </div>
-      </form>
-
-      {/* Lista de usuários */}
       <div className="card" style={{ padding: 12 }}>
         <div className="row-between" style={{ marginBottom: 8 }}>
           <h3 style={{ margin: 0 }}>Lista</h3>
-          <small className="muted">
-            Total: {total} • Página {page}/{totalPages}
-          </small>
+          <div>
+            <button className="btn" onClick={() => loadUsers(page)} disabled={loading}>
+              {loading ? "Atualizando…" : "Atualizar"}
+            </button>
+          </div>
         </div>
 
         <div className="table-responsive">
@@ -206,21 +143,13 @@ export default function AdminUsers() {
 
         {/* Paginação */}
         <div className="row-between" style={{ marginTop: 12 }}>
-          <button
-            className="btn"
-            disabled={loading || isFirstPage}
-            onClick={() => loadUsers(page - 1)}
-          >
+          <button className="btn" disabled={loading || page <= 1} onClick={() => loadUsers(page - 1)}>
             ◀ Anterior
           </button>
           <div className="muted">
-            Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+            Total: {total} • Página <strong>{page}</strong> de <strong>{totalPages}</strong>
           </div>
-          <button
-            className="btn"
-            disabled={loading || isLastPage}
-            onClick={() => loadUsers(page + 1)}
-          >
+          <button className="btn" disabled={loading || page >= totalPages} onClick={() => loadUsers(page + 1)}>
             Próxima ▶
           </button>
         </div>
