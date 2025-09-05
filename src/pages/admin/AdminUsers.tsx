@@ -1,6 +1,6 @@
 // src/pages/admin/AdminUsers.tsx
 import React from "react";
-import api, { setAuthToken } from "../../lib/api";
+import adminApi, { listAdminUsers } from "../../lib/adminApi";
 
 type UserRow = {
   name: string;
@@ -16,8 +16,6 @@ type ListResp = {
   limit?: number;
   users: UserRow[];
 };
-
-const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
 function maskPhone(v?: string) {
   if (!v) return "—";
@@ -49,15 +47,6 @@ export default function AdminUsers() {
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
 
-  // ✅ injeta o token do admin no Axios uma vez
-  React.useEffect(() => {
-    const t =
-      localStorage.getItem(ADMIN_TOKEN_KEY) ||
-      localStorage.getItem("myglobyx_token") || // fallback (se houver)
-      "";
-    setAuthToken(t || undefined);
-  }, []);
-
   const total = data?.total ?? data?.users?.length ?? 0;
   const totalPages =
     data?.limit && data?.total
@@ -68,18 +57,21 @@ export default function AdminUsers() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await api.get<ListResp>("/api/admin/users", {
-        params: { page: p, limit },
-      });
-      setData(res.data);
-      setPage(res.data.page || p);
+      // usa o cliente admin (token já vai no header)
+      const resp = await listAdminUsers(p, limit);
+      setData(resp);
+      setPage(resp.page || p);
     } catch (e: any) {
-      // Mostra erro “amigável”
       const code = e?.message || "Erro ao carregar";
       const map: Record<string, string> = {
+        missing_token: "Sessão de admin ausente. Faça login como admin.",
+        missing_admin_token: "Sessão de admin ausente. Faça login como admin.",
+        unauthorized: "Sessão expirada. Entre novamente como admin.",
+        forbidden: "Acesso negado. Esta conta não é admin.",
         HTTP_401: "Sessão expirada. Faça login como admin novamente.",
         HTTP_403: "Acesso negado. Conta sem permissão de administrador.",
-        HTTP_404: "Rota não encontrada (verificação de token também pode causar 404 aqui).",
+        HTTP_404:
+          "Rota não encontrada (token inválido/ausente também pode retornar 404).",
       };
       setMsg(map[code] || code);
     } finally {

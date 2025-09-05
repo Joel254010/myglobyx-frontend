@@ -1,22 +1,60 @@
 // src/lib/adminApi.ts
-import api from "./api";
+import axios, { AxiosError } from "axios";
+import { BASE_URL } from "./api"; // reaproveita a mesma base URL do app
 
-// 👉 token EXCLUSIVO do admin
+// 👉 token EXCLUSIVO do admin (separado do token do cliente)
 const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
+/* Helpers de token admin */
 export function getAdminToken(): string | null {
   return localStorage.getItem(ADMIN_TOKEN_KEY);
 }
-
 export function setAdminToken(token: string) {
   localStorage.setItem(ADMIN_TOKEN_KEY, token);
 }
-
 export function clearAdminToken() {
   localStorage.removeItem(ADMIN_TOKEN_KEY);
 }
 
-/** ===== Grants / Permissões do Admin ===== */
+/** ================== Axios do Admin (com injeção de token) ================== */
+const adminApi = axios.create({
+  baseURL: BASE_URL,
+  headers: { "Content-Type": "application/json" },
+  timeout: 60_000,
+});
+
+// injeta o token de admin antes de cada request
+adminApi.interceptors.request.use((config) => {
+  const t =
+    getAdminToken() ||
+    localStorage.getItem("myglobyx_token") || // fallback (se estiver usando o mesmo token)
+    "";
+  if (t) {
+    config.headers = config.headers || {};
+    (config.headers as any).Authorization = `Bearer ${t}`;
+  }
+  return config;
+});
+
+// normaliza erros como no api.ts
+adminApi.interceptors.response.use(
+  (r) => r,
+  (err: AxiosError<any>) => {
+    if (
+      err.code === "ECONNABORTED" ||
+      err.code === "ERR_NETWORK" ||
+      err.message?.toLowerCase().includes("network")
+    ) {
+      return Promise.reject(new Error("network_error"));
+    }
+    const code = (err.response?.data as any)?.error as string | undefined;
+    if (code) return Promise.reject(new Error(code));
+    const http = err.response?.status ? `HTTP_${err.response.status}` : "unknown_error";
+    return Promise.reject(new Error(http));
+  }
+);
+
+/** ================== Grants / Permissões do Admin ================== */
 export type AdminGrants = {
   isAdmin: boolean;
   roles?: string[];
@@ -25,29 +63,58 @@ export type AdminGrants = {
 
 /**
  * Valida as permissões do admin no backend.
- * Usa o token passado (ex.: logo após o login) ou o salvo no localStorage.
- * O endpoint esperado é /api/admin/ping retornando algo como:
- * { ok: true, isAdmin: boolean, roles?: string[], email?: string }
+ * Se `passedToken` vier, usa só nessa chamada; caso contrário usa o token salvo (interceptor).
  */
 export async function getAdminGrants(passedToken?: string): Promise<AdminGrants> {
-  const t = passedToken || getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
+  const cfg = passedToken
+    ? { headers: { Authorization: `Bearer ${passedToken}` } }
+    : undefined;
 
-  const { data } = await api.get("/api/admin/ping", {
-    headers: { Authorization: `Bearer ${t}` },
-  });
+  const { data } = await adminApi.get("/api/admin/ping", cfg);
 
-  const roles: string[] = Array.isArray(data?.roles) ? data.roles : (data?.isAdmin ? ["admin"] : []);
-  const isAdmin = Boolean(data?.isAdmin || roles.includes("admin"));
+  const roles: string[] = Array.isArray(data?.roles)
+    ? data.roles
+    : data?.isAdmin
+    ? ["admin"]
+    : [];
 
   return {
-    isAdmin,
+    isAdmin: Boolean(data?.isAdmin || roles.includes("admin")),
     roles,
     email: data?.email,
   };
 }
 
-/** ===== Produtos (CRUD) ===== */
+export async function adminPing() {
+  const { data } = await adminApi.get("/api/admin/ping");
+  return data;
+}
+
+/** ================== Usuários (Admin) ================== */
+export type AdminUserRow = {
+  name: string;
+  email: string;
+  phone?: string;
+  isVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminUsersResp = {
+  total: number;
+  page: number;
+  limit: number;
+  users: AdminUserRow[];
+};
+
+export async function listAdminUsers(page = 1, limit = 25): Promise<AdminUsersResp> {
+  const { data } = await adminApi.get<AdminUsersResp>("/api/admin/users", {
+    params: { page, limit },
+  });
+  return data;
+}
+
+/** ================== Produtos (CRUD) ================== */
 export type AdminProduct = {
   id: string;
   title: string;
@@ -60,51 +127,32 @@ export type AdminProduct = {
   updatedAt?: string;
 };
 
-export async function adminPing() {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.get("/api/admin/ping", {
-    headers: { Authorization: `Bearer ${t}` },
-  });
-  return data;
-}
-
 export async function listProducts() {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.get<{ products: AdminProduct[] }>("/api/admin/products", {
-    headers: { Authorization: `Bearer ${t}` },
-  });
+  const { data } = await adminApi.get<{ products: AdminProduct[] }>("/api/admin/products");
   return data.products;
 }
 
 export async function createProduct(payload: Partial<AdminProduct>) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.post<{ product: AdminProduct }>("/api/admin/products", payload, {
-    headers: { Authorization: `Bearer ${t}` },
-  });
+  const { data } = await adminApi.post<{ product: AdminProduct }>(
+    "/api/admin/products",
+    payload
+  );
   return data.product;
 }
 
 export async function updateProduct(id: string, patch: Partial<AdminProduct>) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.put<{ product: AdminProduct }>(`/api/admin/products/${id}`, patch, {
-    headers: { Authorization: `Bearer ${t}` },
-  });
+  const { data } = await adminApi.put<{ product: AdminProduct }>(
+    `/api/admin/products/${id}`,
+    patch
+  );
   return data.product;
 }
 
 export async function deleteProduct(id: string) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  await api.delete(`/api/admin/products/${id}`, {
-    headers: { Authorization: `Bearer ${t}` },
-  });
+  await adminApi.delete(`/api/admin/products/${id}`);
 }
 
-/** ===== Grants de Acesso a Produtos ===== */
+/** ================== Grants de Acesso a Produtos ================== */
 export type Grant = {
   id: string;
   email: string;
@@ -114,31 +162,28 @@ export type Grant = {
 };
 
 export async function listGrants(email?: string) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.get<{ grants: Grant[] }>(
-    `/api/admin/grants${email ? `?email=${encodeURIComponent(email)}` : ""}`,
-    { headers: { Authorization: `Bearer ${t}` } }
+  const { data } = await adminApi.get<{ grants: Grant[] }>(
+    `/api/admin/grants${email ? `?email=${encodeURIComponent(email)}` : ""}`
   );
   return data.grants;
 }
 
 export async function grantAccess(email: string, productId: string, expiresAt?: string) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  const { data } = await api.post<{ grant: Grant }>(
-    `/api/admin/grants`,
-    { email, productId, expiresAt },
-    { headers: { Authorization: `Bearer ${t}` } }
-  );
+  const { data } = await adminApi.post<{ grant: Grant }>(`/api/admin/grants`, {
+    email,
+    productId,
+    expiresAt,
+  });
   return data.grant;
 }
 
 export async function revokeAccess(email: string, productId: string) {
-  const t = getAdminToken();
-  if (!t) throw new Error("missing_admin_token");
-  await api.delete(
-    `/api/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(productId)}`,
-    { headers: { Authorization: `Bearer ${t}` } }
+  await adminApi.delete(
+    `/api/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(
+      productId
+    )}`
   );
 }
+
+/** exporta o cliente também, caso queira usar direto */
+export default adminApi;
