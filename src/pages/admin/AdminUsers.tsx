@@ -1,6 +1,6 @@
 // src/pages/admin/AdminUsers.tsx
 import React from "react";
-import api from "../../lib/api";
+import api, { setAuthToken } from "../../lib/api";
 
 type UserRow = {
   name: string;
@@ -49,10 +49,14 @@ export default function AdminUsers() {
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
 
-  const token = React.useMemo(
-    () => localStorage.getItem(ADMIN_TOKEN_KEY) || "",
-    []
-  );
+  // ✅ injeta o token do admin no Axios uma vez
+  React.useEffect(() => {
+    const t =
+      localStorage.getItem(ADMIN_TOKEN_KEY) ||
+      localStorage.getItem("myglobyx_token") || // fallback (se houver)
+      "";
+    setAuthToken(t || undefined);
+  }, []);
 
   const total = data?.total ?? data?.users?.length ?? 0;
   const totalPages =
@@ -66,12 +70,18 @@ export default function AdminUsers() {
     try {
       const res = await api.get<ListResp>("/api/admin/users", {
         params: { page: p, limit },
-        headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
       setPage(res.data.page || p);
     } catch (e: any) {
-      setMsg(e?.message || "Falha ao carregar usuários.");
+      // Mostra erro “amigável”
+      const code = e?.message || "Erro ao carregar";
+      const map: Record<string, string> = {
+        HTTP_401: "Sessão expirada. Faça login como admin novamente.",
+        HTTP_403: "Acesso negado. Conta sem permissão de administrador.",
+        HTTP_404: "Rota não encontrada (verificação de token também pode causar 404 aqui).",
+      };
+      setMsg(map[code] || code);
     } finally {
       setLoading(false);
     }
@@ -95,11 +105,9 @@ export default function AdminUsers() {
       <div className="card" style={{ padding: 12 }}>
         <div className="row-between" style={{ marginBottom: 8 }}>
           <h3 style={{ margin: 0 }}>Lista</h3>
-          <div>
-            <button className="btn" onClick={() => loadUsers(page)} disabled={loading}>
-              {loading ? "Atualizando…" : "Atualizar"}
-            </button>
-          </div>
+          <button className="btn" onClick={() => loadUsers(page)} disabled={loading}>
+            {loading ? "Atualizando…" : "Atualizar"}
+          </button>
         </div>
 
         <div className="table-responsive">
