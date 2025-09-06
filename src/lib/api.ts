@@ -1,10 +1,14 @@
+// src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 /**
- * Prioridade da base URL:
- * 1) VITE_API_URL (Netlify/.env.local)
- * 2) localhost:4000 quando rodando local
- * 3) backend de produção (Render) como fallback
+ * BASE_URL padronizada:
+ * - Usa VITE_API_URL se houver (Netlify / .env.local)
+ * - Em localhost, cai no proxy do Vite em "/api" (recomendado)
+ * - Em produção, usa o Render com /api
+ *
+ * Dica: no .env.local coloque VITE_API_URL=/api  (com o proxy do Vite ativo)
+ * Em produção (Netlify): VITE_API_URL=https://backend-myglobyx.onrender.com/api
  */
 const RAW_API_URL = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
 
@@ -14,8 +18,10 @@ const isLocalhost =
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
-const DEFAULT_LOCAL = "http://127.0.0.1:4000";
-const DEFAULT_PROD = "https://backend-myglobyx.onrender.com";
+// Recomendado em dev: usar o proxy do Vite
+const DEFAULT_LOCAL = "/api";
+// Produção: backend Render com prefixo /api
+const DEFAULT_PROD = "https://backend-myglobyx.onrender.com/api";
 
 export const BASE_URL = String(
   RAW_API_URL && RAW_API_URL.trim()
@@ -25,6 +31,9 @@ export const BASE_URL = String(
     : DEFAULT_PROD
 ).replace(/\/+$/, ""); // remove trailing slash
 
+// Base de ORIGEM para endpoints fora do /api (ex.: /health na raiz)
+const ORIGIN_BASE = BASE_URL.replace(/\/api$/, "");
+
 if (!RAW_API_URL) {
   // eslint-disable-next-line no-console
   console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
@@ -33,7 +42,7 @@ if (!RAW_API_URL) {
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 60_000, // 60s para evitar cancel em cold start do Render
+  timeout: 60_000, // 60s para evitar cancel no cold start do Render
   withCredentials: false,
 });
 
@@ -61,22 +70,32 @@ api.interceptors.response.use(
 
 export type AuthResponse = {
   token: string;
-  user: { id?: string; name: string; email: string };
+  user: { id?: string; name: string; email: string; admin?: boolean; isVerified?: boolean };
 };
 
-/** Algumas APIs de signup retornam só {message}, outras {token,user}. Flexibilizamos. */
 export type SignupResponse = Partial<AuthResponse> & { message?: string };
 
-export async function apiSignup(
+/** ✅ Backend expõe /auth/register (não /auth/signup) */
+export async function apiRegister(
   name: string,
   email: string,
   password: string,
   phone?: string
 ): Promise<SignupResponse> {
   const payload: any = { name, email, password };
-  if (phone) payload.phone = phone; // envia telefone (somente dígitos)
-  const { data } = await api.post<SignupResponse>("/auth/signup", payload);
+  if (phone) payload.phone = phone;
+  const { data } = await api.post<SignupResponse>("/auth/register", payload);
   return data;
+}
+
+/** 🔁 Alias para manter compat com imports antigos ({ apiSignup }) */
+export function apiSignup(
+  name: string,
+  email: string,
+  password: string,
+  phone?: string
+): Promise<SignupResponse> {
+  return apiRegister(name, email, password, phone);
 }
 
 export async function apiLogin(email: string, password: string) {
@@ -84,9 +103,9 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
-// 🔥 aquece/verifica o backend
+/** 🔥 aquece/verifica o backend — /health fica na RAIZ, não em /api */
 export async function apiPingHealth() {
-  return api.get("/health");
+  return axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
 }
 
 export type Address = {
@@ -108,18 +127,20 @@ export type Profile = {
   address?: Address;
 };
 
+/** ✅ Removido /api duplicado — baseURL já inclui /api */
 export async function apiGetProfile(token: string) {
-  const { data } = await api.get<{ profile: Profile }>("/api/profile/me", {
+  const { data } = await api.get<{ profile: Profile }>("/profile/me", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data.profile;
 }
 
 export async function apiUpdateProfile(token: string, payload: Profile) {
-  const { data } = await api.put<{ profile: Profile }>("/api/profile/me", payload, {
+  const { data } = await api.put<{ profile: Profile }>("/profile/me", payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data.profile;
 }
 
 export default api;
+
