@@ -1,27 +1,12 @@
+// src/pages/Login.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { apiLogin } from "../lib/api";
+import { getToken, setAuth, initAuthFromStorage } from "../lib/auth";
 
-const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"]; // principal + alias
-const USER_KEY = "myglobyx:user";
-
-function hasTokenSaved() {
-  for (const k of TOKEN_KEYS) {
-    if (localStorage.getItem(k) || sessionStorage.getItem(k)) return true;
-  }
-  return false;
-}
-
-function saveAuth(token: string, user: { name: string; email: string }) {
-  // padrão principal
-  localStorage.setItem(TOKEN_KEYS[0], token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-  // alias de compatibilidade (se algo da app ler esse nome)
-  localStorage.setItem(TOKEN_KEYS[1], token);
-}
+type Msg = { type: "ok" | "err"; text: string } | null;
 
 const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
-  // Normaliza alguns formatos comuns que o axios/fetch podem retornar
   const e = err as any;
 
   // 403 explícito do backend (exigindo verificação)
@@ -31,9 +16,8 @@ const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") =>
   const code = e?.response?.data?.error || e?.message;
   if (!code) return fallback;
 
-  // normalizações
   const norm = String(code).toLowerCase();
-  if (norm.includes("verific")) return "not_verified"; // "E-mail não verificado", etc.
+  if (norm.includes("verific")) return "not_verified";
   if (norm.includes("invalid_credentials")) return "invalid_credentials";
   if (norm.includes("unauthorized")) return "unauthorized";
   if (norm.includes("network")) return "network_error";
@@ -44,26 +28,27 @@ const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") =>
 export default function Login() {
   const nav = useNavigate();
   const location = useLocation();
+  const fromPath = (location.state as any)?.from?.pathname || "/app";
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrar, setMostrar] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [msg, setMsg] = useState<Msg>(null);
   const [loading, setLoading] = useState(false);
 
-  // Redireciona se já tiver token salvo
+  // Bootstrap do Authorization + redireciona se já logado
   useEffect(() => {
-    if (hasTokenSaved()) {
-      nav("/app", { replace: true });
-    }
-  }, [nav]);
+    initAuthFromStorage();
+    const existing = getToken();
+    if (existing) nav(fromPath, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Exibe aviso quando vier de /api/auth/verify → /login?verificado=1
+  // Aviso quando vier de /api/auth/verify → /login?verificado=1
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (q.get("verificado") === "1") {
       setMsg({ type: "ok", text: "E-mail verificado com sucesso! Faça login para continuar." });
-      // opcional: limpar o query param (mantém UI limpa após o primeiro render)
       const url = new URL(window.location.href);
       url.searchParams.delete("verificado");
       window.history.replaceState({}, "", url.toString());
@@ -86,9 +71,9 @@ export default function Login() {
     try {
       setLoading(true);
       const { token, user } = await apiLogin(email, senha); // { token, user }
-      saveAuth(token, user);
+      setAuth(token, user); // salva em todas as chaves + configura Authorization no axios
       setMsg({ type: "ok", text: "Login realizado! Redirecionando…" });
-      nav("/app", { replace: true });
+      nav(fromPath, { replace: true });
     } catch (err) {
       const code = getApiErrorMessageLocal(err);
       const map: Record<string, string> = {
@@ -98,7 +83,10 @@ export default function Login() {
         not_verified:
           "Confirme seu e-mail para acessar. Enviamos um link de verificação para sua caixa de entrada.",
       };
-      setMsg({ type: "err", text: map[code] || String(code) || "Não foi possível entrar. Tente novamente." });
+      setMsg({
+        type: "err",
+        text: map[code] || String(code) || "Não foi possível entrar. Tente novamente.",
+      });
     } finally {
       setLoading(false);
     }
