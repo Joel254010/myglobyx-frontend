@@ -1,34 +1,47 @@
+// src/main.tsx
 import React, { lazy, Suspense, useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import "./style.css";
 
 import PrivateRoute from "./routes/PrivateRoute";
-import AdminRoute from "./routes/AdminRoute"; // ✅ guard do admin
+import AdminRoute from "./routes/AdminRoute";
 
-/* Páginas (lazy) */
-const Home = lazy(() => import("./pages/Home"));
-const ComoFunciona = lazy(() => import("./pages/ComoFunciona"));
-const Login = lazy(() => import("./pages/Login"));
-const CriarConta = lazy(() => import("./pages/CriarConta"));
-const MundoDigital = lazy(() => import("./pages/MundoDigital"));
-const MeusProdutos = lazy(() => import("./pages/MeusProdutos"));
-const Suporte = lazy(() => import("./pages/Suporte"));
-const Termos = lazy(() => import("./pages/Termos"));
-const Privacidade = lazy(() => import("./pages/Privacidade"));
-const MeusDados = lazy(() => import("./pages/MeusDados"));
+// ✅ ajuste de caminhos: como este arquivo está em src/, use "./lib/*"
+import { initAuthFromStorage } from "./lib/auth";
+import { apiPingHealth } from "./lib/api";
+
+/* Páginas (lazy) — ✅ todos com "./pages/*" */
+const Home          = lazy(() => import("./pages/Home"));
+const ComoFunciona  = lazy(() => import("./pages/ComoFunciona"));
+const Login         = lazy(() => import("./pages/Login"));
+const CriarConta    = lazy(() => import("./pages/CriarConta"));
+const MundoDigital  = lazy(() => import("./pages/MundoDigital"));
+const MeusProdutos  = lazy(() => import("./pages/MeusProdutos"));
+const Suporte       = lazy(() => import("./pages/Suporte"));
+const Termos        = lazy(() => import("./pages/Termos"));
+const Privacidade   = lazy(() => import("./pages/Privacidade"));
+const MeusDados     = lazy(() => import("./pages/MeusDados"));
 
 /* Admin (lazy) */
 const AdminLayout   = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
 const AdminGrants   = lazy(() => import("./pages/admin/AdminGrants"));
 const AdminUsers    = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminLogin    = lazy(() => import("./pages/admin/AdminLogin")); // ✅ novo
+const AdminLogin    = lazy(() => import("./pages/admin/AdminLogin"));
 
 /* Scroll to top */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+/* Aquecer backend (Render cold start) */
+function WarmBackend() {
+  useEffect(() => {
+    apiPingHealth().catch(() => void 0);
+  }, []);
   return null;
 }
 
@@ -82,10 +95,14 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+/* Restaura Authorization do Axios no boot */
+initAuthFromStorage();
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
       <ScrollToTop />
+      <WarmBackend />
       <ErrorBoundary>
         <Suspense fallback={<Loader />}>
           <Routes>
@@ -98,8 +115,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route path="/termos" element={<Termos />} />
             <Route path="/privacidade" element={<Privacidade />} />
 
-            {/* login do admin (sessão separada) */}
-            <Route path="/admin/login" element={<AdminLogin />} /> {/* ✅ novo */}
+            {/* login do admin */}
+            <Route path="/admin/login" element={<AdminLogin />} />
 
             {/* área logada (cliente) */}
             <Route element={<PrivateRoute />}>
@@ -107,6 +124,11 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
               <Route path="/app/meus-produtos" element={<MeusProdutos />} />
               <Route path="/app/meus-dados" element={<MeusDados />} />
             </Route>
+
+            {/* redirects legados */}
+            <Route path="/mundo-digital" element={<Navigate to="/app" replace />} />
+            <Route path="/meus-produtos" element={<Navigate to="/app/meus-produtos" replace />} />
+            <Route path="/meus-dados" element={<Navigate to="/app/meus-dados" replace />} />
 
             {/* admin protegido */}
             <Route element={<AdminRoute />}>
