@@ -1,7 +1,7 @@
+// src/pages/admin/AdminLogin.tsx
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { apiLogin, apiPingHealth } from "../../lib/api";
-import { getAdminGrants } from "../../lib/adminApi";
+import { apiLogin, apiPingHealth, apiAdminPing } from "../../lib/api";
 
 const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 
@@ -48,26 +48,23 @@ export default function AdminLogin() {
       setLoading(true);
       const em = email.trim().toLowerCase();
 
-      // tentativa 1
+      // tentativa 1 (com backoff para cold start)
       let data;
       try {
         data = await tryLoginOnce(em, senha);
       } catch (err) {
         if (getErrMessage(err) !== "network_error") throw err;
 
-        // warm-up + backoff 500ms e tenta de novo
         await apiPingHealth().catch(() => {});
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 500));
 
-        // tentativa 2
         try {
           data = await tryLoginOnce(em, senha);
         } catch (err2) {
           if (getErrMessage(err2) !== "network_error") throw err2;
 
-          // último backoff e última tentativa (3ª)
           await apiPingHealth().catch(() => {});
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 1000));
           data = await tryLoginOnce(em, senha);
         }
       }
@@ -75,10 +72,11 @@ export default function AdminLogin() {
       const { token } = data;
       localStorage.setItem(ADMIN_TOKEN_KEY, token);
 
-      const grants = await getAdminGrants(token);
+      // ✅ Verificação de admin compatível com o backend atual (GET /api/admin/ping)
+      const ping = await apiAdminPing(token);
       const isAdmin =
-        Boolean((grants as any)?.isAdmin) ||
-        (Array.isArray((grants as any)?.roles) && (grants as any).roles.includes("admin"));
+        Boolean(ping?.isAdmin) ||
+        (Array.isArray(ping?.roles) && ping.roles.includes("admin"));
 
       if (!isAdmin) {
         localStorage.removeItem(ADMIN_TOKEN_KEY);

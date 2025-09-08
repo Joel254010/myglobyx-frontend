@@ -75,6 +75,7 @@ export async function apiRegister(
   return data;
 }
 
+// alias para compat
 export function apiSignup(
   name: string,
   email: string,
@@ -89,12 +90,11 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
-/** /health na raiz (pode dar CORS; tudo bem) */
+/** /health na raiz (pode dar CORS; ignoramos) */
 export async function apiPingHealth() {
   try {
     return await axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
   } catch {
-    // ignora erros de CORS/cold start
     return;
   }
 }
@@ -146,6 +146,17 @@ export async function apiUpdateProfile(token: string, payload: Profile) {
     }
     throw e;
   }
+}
+
+/** ===== Admin ===== */
+export type AdminPingResponse = { ok: boolean; isAdmin?: boolean; roles?: string[]; email?: string };
+
+/** Backend publicado aceita GET /admin/ping */
+export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
+  const { data } = await api.get<AdminPingResponse>("/admin/ping", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
 }
 
 export default api;
