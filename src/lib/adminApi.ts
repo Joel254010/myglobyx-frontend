@@ -1,4 +1,3 @@
-// src/lib/adminApi.ts
 import axios, { AxiosError } from "axios";
 import { BASE_URL } from "./api"; // reaproveita a mesma base URL do app
 
@@ -85,8 +84,13 @@ export async function getAdminGrants(passedToken?: string): Promise<AdminGrants>
   };
 }
 
-export async function adminPing() {
-  const { data } = await adminApi.get("/api/admin/ping");
+// ✅ AJUSTADO: permite validar usando token opcional passado manualmente
+export async function adminPing(passedToken?: string) {
+  const config = passedToken
+    ? { headers: { Authorization: `Bearer ${passedToken}` } }
+    : undefined;
+
+  const { data } = await adminApi.get("/api/admin/ping", config);
   return data;
 }
 

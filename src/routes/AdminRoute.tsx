@@ -17,7 +17,7 @@ export default function AdminRoute() {
 
     (async () => {
       try {
-        await adminPing(); // faz GET /api/admin/ping com Bearer do localStorage
+        await adminPing(t); // faz GET /api/admin/ping com Bearer do localStorage
         if (!active) return;
         setOk(true);
       } catch (err: any) {
