@@ -1,41 +1,47 @@
 import axios, { AxiosError } from "axios";
-import { BASE_URL } from "./api"; // reaproveita a mesma base URL do app
+import { BASE_URL } from "./api";
 
-// 👉 token EXCLUSIVO do admin (separado do token do cliente)
-const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
+// ========================
+// 🔐 Token do Admin
+// ========================
 
-/* Helpers de token admin */
+export const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
+
 export function getAdminToken(): string | null {
   return localStorage.getItem(ADMIN_TOKEN_KEY);
 }
+
 export function setAdminToken(token: string) {
   localStorage.setItem(ADMIN_TOKEN_KEY, token);
 }
+
 export function clearAdminToken() {
   localStorage.removeItem(ADMIN_TOKEN_KEY);
 }
 
-/** ================== Axios do Admin (com injeção de token) ================== */
+// ========================
+// ⚙️ Axios configurado com injeção automática de token
+// ========================
+
 const adminApi = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 60_000,
 });
 
-// injeta o token de admin antes de cada request
+// Intercepta requisições e injeta o token admin
 adminApi.interceptors.request.use((config) => {
-  const t =
+  const token =
     getAdminToken() ||
-    localStorage.getItem("myglobyx_token") || // fallback (se estiver usando o mesmo token)
-    "";
-  if (t) {
+    localStorage.getItem("myglobyx_token") || ""; // fallback
+  if (token) {
     config.headers = config.headers || {};
-    (config.headers as any).Authorization = `Bearer ${t}`;
+    (config.headers as any).Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// normaliza erros como no api.ts
+// Intercepta erros e os normaliza
 adminApi.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {
@@ -53,25 +59,34 @@ adminApi.interceptors.response.use(
   }
 );
 
-/** ================== Grants / Permissões do Admin ================== */
-export type AdminGrants = {
-  isAdmin: boolean;
-  roles?: string[];
-  email?: string;
-};
+// ========================
+// 🔐 Autenticação do Admin
+// ========================
 
-/**
- * Valida as permissões do admin no backend.
- * Se `passedToken` vier, usa só nessa chamada; caso contrário usa o token salvo (interceptor).
- */
-export async function getAdminGrants(passedToken?: string): Promise<AdminGrants> {
-  const cfg = passedToken
+/** Faz login como admin */
+export async function loginAdmin(email: string, password: string) {
+  const { data } = await adminApi.post<{ token: string }>("/auth/login", { email, password });
+  return data;
+}
+
+/** Valida o token e retorna dados do admin (GET /api/admin/ping) */
+export async function getAdminPing(passedToken?: string | null) {
+  const config = passedToken
     ? { headers: { Authorization: `Bearer ${passedToken}` } }
     : undefined;
 
-  const { data } = await adminApi.get("/admin/ping", cfg);
+  const { data } = await adminApi.get("/api/admin/ping", config);
+  return data;
+}
 
-  const roles: string[] = Array.isArray(data?.roles)
+/** Alternativa com tipo estruturado */
+export async function getAdminGrants(passedToken?: string | null): Promise<{
+  isAdmin: boolean;
+  roles?: string[];
+  email?: string;
+}> {
+  const data = await getAdminPing(passedToken);
+  const roles = Array.isArray(data?.roles)
     ? data.roles
     : data?.isAdmin
     ? ["admin"]
@@ -84,17 +99,10 @@ export async function getAdminGrants(passedToken?: string): Promise<AdminGrants>
   };
 }
 
-// ✅ AJUSTADO: permite validar usando token opcional passado manualmente
-export async function adminPing(passedToken?: string) {
-  const config = passedToken
-    ? { headers: { Authorization: `Bearer ${passedToken}` } }
-    : undefined;
+// ========================
+// 👤 Usuários do sistema
+// ========================
 
-  const { data } = await adminApi.get("/api/admin/ping", config);
-  return data;
-}
-
-/** ================== Usuários (Admin) ================== */
 export type AdminUserRow = {
   name: string;
   email: string;
@@ -118,7 +126,10 @@ export async function listAdminUsers(page = 1, limit = 25): Promise<AdminUsersRe
   return data;
 }
 
-/** ================== Produtos (CRUD) ================== */
+// ========================
+// 📦 Produtos digitais
+// ========================
+
 export type AdminProduct = {
   id: string;
   title: string;
@@ -131,12 +142,12 @@ export type AdminProduct = {
   updatedAt?: string;
 };
 
-export async function listProducts() {
+export async function listProducts(): Promise<AdminProduct[]> {
   const { data } = await adminApi.get<{ products: AdminProduct[] }>("/api/admin/products");
   return data.products;
 }
 
-export async function createProduct(payload: Partial<AdminProduct>) {
+export async function createProduct(payload: Partial<AdminProduct>): Promise<AdminProduct> {
   const { data } = await adminApi.post<{ product: AdminProduct }>(
     "/api/admin/products",
     payload
@@ -144,7 +155,7 @@ export async function createProduct(payload: Partial<AdminProduct>) {
   return data.product;
 }
 
-export async function updateProduct(id: string, patch: Partial<AdminProduct>) {
+export async function updateProduct(id: string, patch: Partial<AdminProduct>): Promise<AdminProduct> {
   const { data } = await adminApi.put<{ product: AdminProduct }>(
     `/api/admin/products/${id}`,
     patch
@@ -156,7 +167,10 @@ export async function deleteProduct(id: string) {
   await adminApi.delete(`/api/admin/products/${id}`);
 }
 
-/** ================== Grants de Acesso a Produtos ================== */
+// ========================
+// 🎫 Grants (Acesso a produtos)
+// ========================
+
 export type Grant = {
   id: string;
   email: string;
@@ -165,14 +179,14 @@ export type Grant = {
   expiresAt?: string;
 };
 
-export async function listGrants(email?: string) {
+export async function listGrants(email?: string): Promise<Grant[]> {
   const { data } = await adminApi.get<{ grants: Grant[] }>(
     `/api/admin/grants${email ? `?email=${encodeURIComponent(email)}` : ""}`
   );
   return data.grants;
 }
 
-export async function grantAccess(email: string, productId: string, expiresAt?: string) {
+export async function grantAccess(email: string, productId: string, expiresAt?: string): Promise<Grant> {
   const { data } = await adminApi.post<{ grant: Grant }>(`/api/admin/grants`, {
     email,
     productId,
@@ -189,5 +203,8 @@ export async function revokeAccess(email: string, productId: string) {
   );
 }
 
-/** exporta o cliente também, caso queira usar direto */
+// ========================
+// Exporta o client Axios também
+// ========================
+
 export default adminApi;

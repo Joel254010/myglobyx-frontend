@@ -1,19 +1,12 @@
-// src/pages/admin/AdminLogin.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { apiLogin, apiPingHealth, apiAdminPing } from "../../lib/api";
-
-const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
-
-function getErrMessage(err: unknown, fallback = "Erro inesperado.") {
-  if (err instanceof Error) return err.message;
-  const e = err as any;
-  return e?.response?.data?.error || e?.message || fallback;
-}
+import { apiPingHealth } from "../../lib/api";
+import { loginAdmin, getAdminPing, ADMIN_TOKEN_KEY } from "../../lib/adminApi";
 
 export default function AdminLogin() {
   const nav = useNavigate();
   const location = useLocation();
+
   const redirectTo =
     (location.state as any)?.from?.pathname &&
     String((location.state as any).from.pathname).startsWith("/admin")
@@ -28,14 +21,10 @@ export default function AdminLogin() {
 
   const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
-  // Warm-up no mount (acorda Render)
-  React.useEffect(() => {
+  // ✅ Ping inicial para acordar o Render
+  useEffect(() => {
     apiPingHealth().catch(() => {});
   }, []);
-
-  async function tryLoginOnce(em: string, pw: string) {
-    return apiLogin(em, pw);
-  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,39 +33,35 @@ export default function AdminLogin() {
     if (!validarEmail(email)) return setMsg({ type: "err", text: "Digite um e-mail válido." });
     if (senha.length < 6) return setMsg({ type: "err", text: "A senha precisa ter pelo menos 6 caracteres." });
 
+    const em = email.trim().toLowerCase();
+
     try {
       setLoading(true);
-      const em = email.trim().toLowerCase();
 
-      // tentativa 1 (com backoff para cold start)
-      let data;
-      try {
-        data = await tryLoginOnce(em, senha);
-      } catch (err) {
-        if (getErrMessage(err) !== "network_error") throw err;
-
-        await apiPingHealth().catch(() => {});
-        await new Promise((r) => setTimeout(r, 500));
-
+      // Tentativas com backoff para cold start
+      let data: { token: string } | undefined;
+      for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          data = await tryLoginOnce(em, senha);
-        } catch (err2) {
-          if (getErrMessage(err2) !== "network_error") throw err2;
-
+          data = await loginAdmin(em, senha);
+          break;
+        } catch (err: any) {
+          if (attempt === 3 || err?.message !== "network_error") throw err;
           await apiPingHealth().catch(() => {});
-          await new Promise((r) => setTimeout(r, 1000));
-          data = await tryLoginOnce(em, senha);
+          await new Promise((r) => setTimeout(r, attempt * 500));
         }
       }
 
-      const { token } = data;
+      // ✅ Verificação segura do token
+      if (!data || !data.token) {
+        throw new Error("invalid_token");
+      }
+
+      const token = data.token;
       localStorage.setItem(ADMIN_TOKEN_KEY, token);
 
-      // ✅ Verificação de admin compatível com o backend atual (GET /api/admin/ping)
-      const ping = await apiAdminPing(token);
-      const isAdmin =
-        Boolean(ping?.isAdmin) ||
-        (Array.isArray(ping?.roles) && ping.roles.includes("admin"));
+      // ✅ Verifica permissão admin via /api/admin/ping
+      const ping = await getAdminPing(token);
+      const isAdmin = ping?.isAdmin === true;
 
       if (!isAdmin) {
         localStorage.removeItem(ADMIN_TOKEN_KEY);
@@ -85,14 +70,16 @@ export default function AdminLogin() {
 
       setMsg({ type: "ok", text: "Login do admin realizado!" });
       nav(redirectTo, { replace: true });
-    } catch (err) {
-      const code = getErrMessage(err);
+    } catch (err: any) {
+      const code = err?.response?.data?.error || err?.message || "login_failed";
       const map: Record<string, string> = {
         invalid_credentials: "E-mail ou senha inválidos.",
         unauthorized: "Acesso negado.",
+        invalid_token: "Resposta inválida do servidor.",
         network_error: "Servidor acordando... tente novamente.",
+        login_failed: "Não foi possível entrar como admin.",
       };
-      setMsg({ type: "err", text: map[code] || code || "Não foi possível entrar como admin." });
+      setMsg({ type: "err", text: map[code] || code });
     } finally {
       setLoading(false);
     }
