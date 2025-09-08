@@ -1,15 +1,6 @@
 // src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
-/**
- * BASE_URL padronizada:
- * - Usa VITE_API_URL se houver (Netlify / .env.local)
- * - Em localhost, cai no proxy do Vite em "/api" (recomendado)
- * - Em produção, usa o Render com /api
- *
- * Dica: no .env.local coloque VITE_API_URL=/api  (com o proxy do Vite ativo)
- * Em produção (Netlify): VITE_API_URL=https://backend-myglobyx.onrender.com/api
- */
 const RAW_API_URL = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
 
 const isBrowser = typeof window !== "undefined";
@@ -18,9 +9,7 @@ const isLocalhost =
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
-// Recomendado em dev: usar o proxy do Vite
 const DEFAULT_LOCAL = "/api";
-// Produção: backend Render com prefixo /api
 const DEFAULT_PROD = "https://backend-myglobyx.onrender.com/api";
 
 export const BASE_URL = String(
@@ -29,20 +18,18 @@ export const BASE_URL = String(
     : isLocalhost
     ? DEFAULT_LOCAL
     : DEFAULT_PROD
-).replace(/\/+$/, ""); // remove trailing slash
+).replace(/\/+$/, "");
 
-// Base de ORIGEM para endpoints fora do /api (ex.: /health na raiz)
 const ORIGIN_BASE = BASE_URL.replace(/\/api$/, "");
 
 if (!RAW_API_URL) {
-  // eslint-disable-next-line no-console
   console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
 }
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 60_000, // 60s para evitar cancel no cold start do Render
+  timeout: 60_000,
   withCredentials: false,
 });
 
@@ -75,7 +62,6 @@ export type AuthResponse = {
 
 export type SignupResponse = Partial<AuthResponse> & { message?: string };
 
-/** ✅ Backend expõe /auth/register (não /auth/signup) */
 export async function apiRegister(
   name: string,
   email: string,
@@ -88,7 +74,6 @@ export async function apiRegister(
   return data;
 }
 
-/** 🔁 Alias para manter compat com imports antigos ({ apiSignup }) */
 export function apiSignup(
   name: string,
   email: string,
@@ -103,7 +88,6 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
-/** 🔥 aquece/verifica o backend — /health fica na RAIZ, não em /api */
 export async function apiPingHealth() {
   return axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
 }
@@ -127,7 +111,6 @@ export type Profile = {
   address?: Address;
 };
 
-/** ✅ Removido /api duplicado — baseURL já inclui /api */
 export async function apiGetProfile(token: string) {
   const { data } = await api.get<{ profile: Profile }>("/profile/me", {
     headers: { Authorization: `Bearer ${token}` },
@@ -135,12 +118,12 @@ export async function apiGetProfile(token: string) {
   return data.profile;
 }
 
+// ✅ Correção: backend espera PATCH em /profile (não PUT /profile/me)
 export async function apiUpdateProfile(token: string, payload: Profile) {
-  const { data } = await api.put<{ profile: Profile }>("/profile/me", payload, {
+  const { data } = await api.patch<{ profile: Profile }>("/profile", payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data.profile;
 }
 
 export default api;
-
