@@ -69,7 +69,7 @@ export async function getAdminGrants(passedToken?: string): Promise<AdminGrants>
     ? { headers: { Authorization: `Bearer ${passedToken}` } }
     : undefined;
 
-  const { data } = await adminApi.get("/api/admin/ping", cfg);
+  const { data } = await adminApi.get("/admin/ping", cfg);
 
   const roles: string[] = Array.isArray(data?.roles)
     ? data.roles
