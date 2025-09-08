@@ -23,6 +23,7 @@ export const BASE_URL = String(
 const ORIGIN_BASE = BASE_URL.replace(/\/api$/, "");
 
 if (!RAW_API_URL) {
+  // eslint-disable-next-line no-console
   console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
 }
 
@@ -88,8 +89,14 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
+/** /health na raiz (pode dar CORS; tudo bem) */
 export async function apiPingHealth() {
-  return axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
+  try {
+    return await axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
+  } catch {
+    // ignora erros de CORS/cold start
+    return;
+  }
 }
 
 export type Address = {
@@ -118,12 +125,27 @@ export async function apiGetProfile(token: string) {
   return data.profile;
 }
 
-// ✅ Correção: backend espera PATCH em /profile (não PUT /profile/me)
+/**
+ * Atualiza perfil de forma tolerante:
+ * - Tenta PATCH /profile
+ * - Se voltar HTTP_404 ou HTTP_405, cai para PUT /profile/me
+ */
 export async function apiUpdateProfile(token: string, payload: Profile) {
-  const { data } = await api.patch<{ profile: Profile }>("/profile", payload, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data.profile;
+  try {
+    const { data } = await api.patch<{ profile: Profile }>("/profile", payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data.profile;
+  } catch (e: any) {
+    const msg = String(e?.message || "");
+    if (msg === "HTTP_404" || msg === "HTTP_405") {
+      const { data } = await api.put<{ profile: Profile }>("/profile/me", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data.profile;
+    }
+    throw e;
+  }
 }
 
 export default api;
