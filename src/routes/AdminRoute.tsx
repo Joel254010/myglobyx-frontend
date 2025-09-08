@@ -10,42 +10,53 @@ export default function AdminRoute() {
   const location = useLocation();
 
   React.useEffect(() => {
-    const t = localStorage.getItem(ADMIN_TOKEN_KEY);
-    if (!t) { setOk(false); return; }
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    if (!token) {
+      setOk(false);
+      return;
+    }
 
-    let active = true;
+    let isMounted = true;
 
-    (async () => {
+    const verificarAdmin = async () => {
       try {
-        await adminPing(t); // faz GET /api/admin/ping com Bearer do localStorage
-        if (!active) return;
-        setOk(true);
+        await adminPing(token); // Faz requisição com Bearer
+        if (isMounted) setOk(true);
       } catch (err: any) {
-        if (!active) return;
-        const code = String(err?.message || "");
+        if (!isMounted) return;
 
-        // Se for claramente falta de permissão/token, limpamos o token
-        const shouldClear =
-          code.includes("missing_admin_token") ||
-          code.includes("unauthorized") ||
-          code.includes("forbidden") ||
-          code.includes("invalid_token") ||
-          code.includes("token_expired") ||
-          code.includes("HTTP_401") ||
-          code.includes("HTTP_403");
+        const msg = String(err?.message || "");
+        const deveRemoverToken = [
+          "missing_admin_token",
+          "unauthorized",
+          "forbidden",
+          "invalid_token",
+          "token_expired",
+          "HTTP_401",
+          "HTTP_403",
+        ].some(c => msg.includes(c));
 
-        if (shouldClear) {
+        if (deveRemoverToken) {
           localStorage.removeItem(ADMIN_TOKEN_KEY);
         }
+
         setOk(false);
       }
-    })();
+    };
 
-    return () => { active = false; };
+    verificarAdmin();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (ok === null) {
-    return <div className="container" style={{ padding: 24 }}>Verificando permissões…</div>;
+    return (
+      <div className="container" style={{ padding: 24 }}>
+        Verificando permissões…
+      </div>
+    );
   }
 
   if (ok === false) {
