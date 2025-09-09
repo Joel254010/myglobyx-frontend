@@ -29,7 +29,6 @@ const adminApi = axios.create({
   timeout: 60_000,
 });
 
-// Intercepta requisições e injeta o token admin
 adminApi.interceptors.request.use((config) => {
   const token =
     getAdminToken() ||
@@ -41,7 +40,6 @@ adminApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Intercepta erros e os normaliza
 adminApi.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {
@@ -63,27 +61,23 @@ adminApi.interceptors.response.use(
 // 🔐 Autenticação do Admin
 // ========================
 
-/** Faz login como admin */
-/** Faz login como admin */
 export async function loginAdmin(email: string, password: string): Promise<{ token: string }> {
   const { data } = await adminApi.post<{ token: string }>(
-    "/admin/login", // ✅ rota correta
+    "/admin/login", // ✅ já estava certo
     { email, password }
   );
-  return data; // ✅ ESSA LINHA É O QUE ESTAVA FALTANDO
-} 
+  return data;
+}
 
-/** Valida o token e retorna dados do admin (GET /api/admin/ping) */
 export async function getAdminPing(passedToken?: string | null) {
   const config = passedToken
     ? { headers: { Authorization: `Bearer ${passedToken}` } }
     : undefined;
 
-  const { data } = await adminApi.get("/api/admin/ping", config);
+  const { data } = await adminApi.get("/admin/ping", config); // ✅ corrigido
   return data;
 }
 
-/** Alternativa com tipo estruturado */
 export async function getAdminGrants(passedToken?: string | null): Promise<{
   isAdmin: boolean;
   roles?: string[];
@@ -124,7 +118,7 @@ export type AdminUsersResp = {
 };
 
 export async function listAdminUsers(page = 1, limit = 25): Promise<AdminUsersResp> {
-  const { data } = await adminApi.get<AdminUsersResp>("/api/admin/users", {
+  const { data } = await adminApi.get<AdminUsersResp>("/admin/users", {
     params: { page, limit },
   });
   return data;
@@ -147,13 +141,13 @@ export type AdminProduct = {
 };
 
 export async function listProducts(): Promise<AdminProduct[]> {
-  const { data } = await adminApi.get<{ products: AdminProduct[] }>("/api/admin/products");
+  const { data } = await adminApi.get<{ products: AdminProduct[] }>("/admin/products");
   return data.products;
 }
 
 export async function createProduct(payload: Partial<AdminProduct>): Promise<AdminProduct> {
   const { data } = await adminApi.post<{ product: AdminProduct }>(
-    "/api/admin/products",
+    "/admin/products",
     payload
   );
   return data.product;
@@ -161,14 +155,14 @@ export async function createProduct(payload: Partial<AdminProduct>): Promise<Adm
 
 export async function updateProduct(id: string, patch: Partial<AdminProduct>): Promise<AdminProduct> {
   const { data } = await adminApi.put<{ product: AdminProduct }>(
-    `/api/admin/products/${id}`,
+    `/admin/products/${id}`,
     patch
   );
   return data.product;
 }
 
 export async function deleteProduct(id: string) {
-  await adminApi.delete(`/api/admin/products/${id}`);
+  await adminApi.delete(`/admin/products/${id}`);
 }
 
 // ========================
@@ -185,13 +179,13 @@ export type Grant = {
 
 export async function listGrants(email?: string): Promise<Grant[]> {
   const { data } = await adminApi.get<{ grants: Grant[] }>(
-    `/api/admin/grants${email ? `?email=${encodeURIComponent(email)}` : ""}`
+    `/admin/grants${email ? `?email=${encodeURIComponent(email)}` : ""}`
   );
   return data.grants;
 }
 
 export async function grantAccess(email: string, productId: string, expiresAt?: string): Promise<Grant> {
-  const { data } = await adminApi.post<{ grant: Grant }>(`/api/admin/grants`, {
+  const { data } = await adminApi.post<{ grant: Grant }>(`/admin/grants`, {
     email,
     productId,
     expiresAt,
@@ -201,7 +195,7 @@ export async function grantAccess(email: string, productId: string, expiresAt?: 
 
 export async function revokeAccess(email: string, productId: string) {
   await adminApi.delete(
-    `/api/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(
+    `/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(
       productId
     )}`
   );
