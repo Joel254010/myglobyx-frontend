@@ -64,13 +64,14 @@ adminApi.interceptors.response.use(
 // ========================
 
 /** Faz login como admin */
-export async function loginAdmin(email: string, password: string) {
+/** Faz login como admin */
+export async function loginAdmin(email: string, password: string): Promise<{ token: string }> {
   const { data } = await adminApi.post<{ token: string }>(
-    "/api/admin/login", // ✅ rota corrigida
+    "/admin/login", // ✅ rota correta
     { email, password }
   );
-  return data;
-}
+  return data; // ✅ ESSA LINHA É O QUE ESTAVA FALTANDO
+} 
 
 /** Valida o token e retorna dados do admin (GET /api/admin/ping) */
 export async function getAdminPing(passedToken?: string | null) {
