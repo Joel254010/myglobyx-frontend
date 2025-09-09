@@ -65,7 +65,10 @@ adminApi.interceptors.response.use(
 
 /** Faz login como admin */
 export async function loginAdmin(email: string, password: string) {
-  const { data } = await adminApi.post<{ token: string }>("/auth/login", { email, password });
+  const { data } = await adminApi.post<{ token: string }>(
+    "/api/admin/login", // ✅ rota corrigida
+    { email, password }
+  );
   return data;
 }
 
