@@ -20,7 +20,9 @@ export const BASE_URL = String(
     : DEFAULT_PROD
 ).replace(/\/+$/, "");
 
-const ORIGIN_BASE = BASE_URL.replace(/\/api$/, "");
+const ORIGIN_BASE = BASE_URL.includes("/api")
+  ? BASE_URL.replace(/\/api$/, "")
+  : BASE_URL;
 
 if (!RAW_API_URL) {
   // eslint-disable-next-line no-console
