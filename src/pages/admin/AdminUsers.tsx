@@ -127,7 +127,18 @@ export default function AdminUsers() {
                         <span className="badge badge--warn">Não verificado</span>
                       )}
                     </td>
-                    <td>{fmtDate(u.createdAt)}</td>
+                    <td>
+  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <span>{fmtDate(u.createdAt)}</span>
+    <button
+      className="btn btn--small"
+      style={{ marginTop: 4, fontSize: 12, padding: "2px 6px" }}
+      onClick={() => alert(`Abrir produtos adquiridos por: ${u.email}`)}
+    >
+      Produtos Adquiridos
+    </button>
+  </div>
+</td>
                   </tr>
                 ))
               ) : (
