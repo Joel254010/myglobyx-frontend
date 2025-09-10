@@ -31,7 +31,6 @@ function storages(): WebStore[] {
 function parseMaybeToken(raw: string): string | null {
   if (!raw) return null;
   let v = raw.trim().replace(/^Bearer\s+/i, "");
-  // Tentar JSON { token | access_token | value }
   try {
     const obj = JSON.parse(raw);
     const cand =
@@ -41,7 +40,6 @@ function parseMaybeToken(raw: string): string | null {
     if (cand) v = String(cand);
   } catch {}
   if (!v) return null;
-  // aceita JWT válido ou legado (mx_token pode não ser JWT porém é string não vazia)
   if (jwtRx.test(v)) return v;
   return v || null;
 }
@@ -49,8 +47,6 @@ function parseMaybeToken(raw: string): string | null {
 // === leitura robusta do token (local ou session, JSON ou "Bearer xxx")
 export function getToken(): string | null {
   const stores = storages();
-
-  // 1) chaves conhecidas
   for (const store of stores) {
     for (const key of TOKEN_KEYS) {
       try {
@@ -61,8 +57,6 @@ export function getToken(): string | null {
       } catch {}
     }
   }
-
-  // 2) varre tudo como fallback
   for (const store of stores) {
     try {
       for (let i = 0; i < store.length; i++) {
@@ -92,16 +86,15 @@ export function getUser<T = any>(): T | null {
 export function setAuth(token: string, user?: any) {
   for (const s of storages()) {
     try {
-      s.setItem(TOKEN_KEYS[0], token); // principal
-      s.setItem(TOKEN_KEYS[1], token); // alias
-      s.setItem(TOKEN_KEYS[2], token); // compat legado
+      s.setItem(TOKEN_KEYS[0], token);
+      s.setItem(TOKEN_KEYS[1], token);
+      s.setItem(TOKEN_KEYS[2], token);
       if (user) s.setItem(USER_KEY, JSON.stringify(user));
     } catch {}
   }
   setAuthToken(token);
 }
 
-// Aliases de compatibilidade
 export const setToken = (t: string, u?: any) => setAuth(t, u);
 
 export function clearAuth() {
@@ -113,14 +106,13 @@ export function clearAuth() {
   setAuthToken(undefined);
 }
 
-// Alias de compatibilidade
 export const clearToken = () => clearAuth();
 
 export function isAuthenticated(): boolean {
   return !!getToken();
 }
 
-// === apenas para DEV/local: cria um token “fake” (mantido por compat)
+// === apenas para DEV/local: cria um token “fake”
 export function loginMock(email: string) {
   const now = Math.floor(Date.now() / 1000);
   const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
@@ -131,9 +123,12 @@ export function loginMock(email: string) {
 
 export function logout() {
   clearAuth();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login"; // redireciona para a página de login após logout
+  }
 }
 
-// === Bootstrap: chama na inicialização do app (para aplicar Authorization global)
+// === Bootstrap
 export function initAuthFromStorage() {
   const t = getToken();
   if (t) setAuthToken(t);
