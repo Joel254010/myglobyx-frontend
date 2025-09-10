@@ -22,7 +22,10 @@ export default function AdminLayout() {
       } catch (err: any) {
         if (!active) return;
         localStorage.removeItem(ADMIN_TOKEN_KEY);
-        navigate("/admin/login", { replace: true, state: { from: { pathname: "/admin" } } });
+        navigate("/admin/login", {
+          replace: true,
+          state: { from: { pathname: "/admin" } },
+        });
         return;
       } finally {
         if (active) setLoading(false);
@@ -40,30 +43,54 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="page" style={{ backgroundImage: 'url(/globyx-globe-bg.svg)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: '60%', backgroundAttachment: 'fixed' }}>
-      <header className="header">
-        <div className="container header__inner">
-          <Link className="brand__logo" to="/">MYGLOBYX</Link>
+    <div
+      className="page"
+      style={{
+        backgroundImage: 'url("/globyx-globe-bg.svg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "60%",
+        backgroundAttachment: "fixed",
+        minHeight: "100vh",
+      }}
+    >
+      <header className="header" style={{ padding: "16px 0" }}>
+        <div
+          className="container header__inner"
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <Link className="brand__logo" to="/" style={{ fontWeight: 700, fontSize: 20 }}>
+            MYGLOBYX
+          </Link>
+
           <nav className="nav" style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {adminEmail && (
-              <div className="dropdown">
+              <div className="dropdown" style={{ position: "relative" }}>
                 <button
-                  onClick={() => setMenuOpen(prev => !prev)}
-                  className="btn btn--link"
-                  style={{ fontSize: 14, opacity: 0.8 }}
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="admin-menu-btn"
                 >
                   {adminEmail}
                 </button>
+
                 {menuOpen && (
-                  <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', background: '#fff', boxShadow: '0 0 10px rgba(0,0,0,0.1)', padding: '8px 12px', borderRadius: 8, zIndex: 1000 }}>
-                    <Link to="/admin/produtos" className="link" onClick={() => setMenuOpen(false)}>Produtos</Link><br />
-                    <Link to="/admin/liberacoes" className="link" onClick={() => setMenuOpen(false)}>Liberações</Link><br />
-                    <Link to="/admin/usuarios" className="link" onClick={() => setMenuOpen(false)}>Usuários</Link>
+                  <div className="admin-submenu">
+                    <Link to="/admin/produtos" onClick={() => setMenuOpen(false)}>
+                      Produtos
+                    </Link>
+                    <Link to="/admin/liberacoes" onClick={() => setMenuOpen(false)}>
+                      Liberações
+                    </Link>
+                    <Link to="/admin/usuarios" onClick={() => setMenuOpen(false)}>
+                      Usuários
+                    </Link>
                   </div>
                 )}
               </div>
             )}
-            <button className="btn btn--outline" onClick={handleAdminLogout}>Sair (Admin)</button>
+            <button className="btn btn--outline" onClick={handleAdminLogout}>
+              Sair (Admin)
+            </button>
           </nav>
         </div>
       </header>
