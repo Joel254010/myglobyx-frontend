@@ -1,9 +1,4 @@
 // src/lib/auth.ts
-//
-// Auth helper unificado (compat + produção)
-// - Chaves suportadas: myglobyx_token, myglobyx:token, mx_token
-// - Salva sempre na principal (myglobyx_token) e mantém aliases por compat.
-// - Integra com axios (setAuthToken) para enviar Authorization: Bearer <token>
 
 import { setAuthToken } from "./api";
 
@@ -16,7 +11,7 @@ const jwtRx = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
 // Tipagem parcial de Storage
 type WebStore = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;
 
-// --- Detecta os storages disponíveis no navegador (localStorage + sessionStorage)
+// Detecta os storages disponíveis (localStorage e sessionStorage)
 function storages(): WebStore[] {
   if (typeof window === "undefined") return [];
   const out: WebStore[] = [];
@@ -29,7 +24,7 @@ function storages(): WebStore[] {
   return out;
 }
 
-// --- Tenta extrair token de string crua ou JSON armazenado
+// Tenta extrair token de string crua ou JSON armazenado
 function parseMaybeToken(raw: string): string | null {
   if (!raw) return null;
   let v = raw.trim().replace(/^Bearer\s+/i, "");
@@ -41,33 +36,20 @@ function parseMaybeToken(raw: string): string | null {
       obj?.value?.toString?.();
     if (cand) v = String(cand);
   } catch {}
-  if (!v) return null;
-  return jwtRx.test(v) ? v : v || null;
+  return jwtRx.test(v) ? v : null;
 }
 
-// === Leitura robusta do token salvo (em qualquer storage e formato)
+// === Leitura robusta do token salvo
 export function getToken(): string | null {
   const stores = storages();
   for (const store of stores) {
     for (const key of TOKEN_KEYS) {
       try {
         const raw = store.getItem(key);
-        if (!raw) continue;
-        const maybe = parseMaybeToken(raw);
+        const maybe = parseMaybeToken(raw || "");
         if (maybe) return maybe;
       } catch {}
     }
-  }
-  // fallback: percorre todas as chaves dos storages
-  for (const store of stores) {
-    try {
-      for (let i = 0; i < store.length; i++) {
-        const k = store.key(i)!;
-        const raw = store.getItem(k) || "";
-        const maybe = parseMaybeToken(raw);
-        if (maybe) return maybe;
-      }
-    } catch {}
   }
   return null;
 }
@@ -77,8 +59,7 @@ export function getUser<T = any>(): T | null {
   for (const s of storages()) {
     try {
       const raw = s.getItem(USER_KEY);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw || "");
       if (parsed && typeof parsed === "object" && parsed.name) {
         return parsed as T;
       }
@@ -87,7 +68,7 @@ export function getUser<T = any>(): T | null {
   return null;
 }
 
-// === Salva token e usuário em todos os storages compatíveis
+// === Salva token e usuário nos storages
 export function setAuth(token: string, user?: any) {
   for (const s of storages()) {
     try {
@@ -99,7 +80,7 @@ export function setAuth(token: string, user?: any) {
 }
 export const setToken = (t: string, u?: any) => setAuth(t, u);
 
-// === Limpa todas as chaves e headers
+// === Limpa todos os tokens e usuário dos storages
 export function clearAuth() {
   for (const s of storages()) {
     try {
@@ -108,42 +89,45 @@ export function clearAuth() {
   }
   setAuthToken(undefined);
 }
-export const clearToken = () => clearAuth();
 
-// === Confirma se existe token válido
+// === Retorna true se houver token válido
 export function isAuthenticated(): boolean {
   return !!getToken();
 }
 
-// === Gera um token mockado (para DEV/local apenas)
+// === Mock login (dev/local apenas)
 export function loginMock(email: string) {
   const now = Math.floor(Date.now() / 1000);
   const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({
-    sub: email.toLowerCase(),
-    email: email.toLowerCase(),
-    iat: now,
-    exp: now + 86400
-  }));
+  const payload = btoa(
+    JSON.stringify({
+      sub: email.toLowerCase(),
+      email: email.toLowerCase(),
+      iat: now,
+      exp: now + 86400,
+    })
+  );
   const fake = `${header}.${payload}.sig`;
   setAuth(fake, { name: email.split("@")[0], email });
 }
 
-// === Executa logout e redireciona para login
+// === Executa logout e força redirecionamento para /login
 export function logout() {
   clearAuth();
   if (typeof window !== "undefined") {
-    window.location.href = "/login";
+    window.location.replace("/login"); // 🔄 garante redirecionamento real
   }
 }
 
-// === Garante que axios use o token salvo no início
+// === Inicializa auth no axios a partir do storage
 export function initAuthFromStorage() {
   const t = getToken();
-  if (t) setAuthToken(t);
+  if (t) {
+    setAuthToken(t);
+  }
 }
 
-// === Header para requisições manuais
+// === Header manual para requisições autenticadas
 export function authHeader(): Record<string, string> {
   const t = getToken();
   return t ? { Authorization: `Bearer ${t}` } : {};

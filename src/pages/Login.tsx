@@ -30,16 +30,10 @@ export default function Login() {
   const [msg, setMsg] = useState<Msg>(null);
   const [loading, setLoading] = useState(false);
 
-  // 🔐 Verifica se já tem sessão válida → redireciona
+  // 🔐 Apenas restaura sessão, mas NÃO redireciona
   useEffect(() => {
-    initAuthFromStorage(); // restaura token salvo
-    const token = getToken();
-    const user = getUser();
-    if (token && user?.name) {
-      // Redireciona apenas se tiver token e nome válido
-      nav(fromPath, { replace: true });
-    }
-  }, [fromPath, nav]);
+    initAuthFromStorage();
+  }, []);
 
   // ✅ Alerta de verificação de e-mail com sucesso
   useEffect(() => {
@@ -74,10 +68,9 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const { token, user } = await apiLogin(email, senha); // { token, user }
-      setAuth(token, user); // salva token + user + configura headers
+      const { token, user } = await apiLogin(email, senha);
+      setAuth(token, user);
 
-      // 🌟 importante para exibir "Olá, Usuário"
       if (user?.name) {
         localStorage.setItem("myglobyx_user_name", user.name);
       }
