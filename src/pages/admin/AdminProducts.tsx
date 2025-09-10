@@ -7,16 +7,44 @@ import {
   deleteProduct,
 } from "../../lib/adminApi";
 
+// Categorias e subcategorias pré-definidas
+const categorias: Record<string, string[]> = {
+  "Animais e Pets": ["Cães", "Gatos", "Outros Pets"],
+  "Autoconhecimento e espiritualidade": ["Meditação", "Autoajuda", "Espiritualidade"],
+  "Carreira e desenvolvimento pessoal": ["Produtividade", "Carreira", "Habilidades"],
+  "Culinária e gastronomia": ["Receitas", "Doces", "Bebidas"],
+  "Design e fotografia": ["Design Gráfico", "Fotografia", "Edição"],
+  "Educação infantil e família": ["Educação Infantil", "Família", "Parentalidade"],
+  "Engenharia e arquitetura": ["Engenharia Civil", "Arquitetura", "Urbanismo"],
+  "Ensino e estudo acadêmico": ["Matemática", "Ciências", "Humanas"],
+  "Finanças e negócios": ["Investimentos", "Gestão", "Empreendedorismo"],
+  "Hobbies e Lazer": ["Artesanato", "Esportes", "Outros Hobbies"],
+  "Manutenção de equipamentos": ["Informática", "Eletrônicos", "Automotivo"],
+  "Marketing e vendas": ["Marketing Digital", "Vendas", "Publicidade"],
+  "Moda e beleza": ["Beleza", "Moda", "Estilo de Vida"],
+  "Música e artes": ["Instrumentos", "Teoria Musical", "Artes Visuais"],
+  "Plantas e ecologia": ["Jardinagem", "Ecologia", "Sustentabilidade"],
+  "Relacionamentos": ["Casais", "Amizades", "Comunicação"],
+  "Saúde e esporte": ["Saúde", "Fitness", "Nutrição"],
+  "Tecnologia e desenvolvimento de software": ["Programação", "IA", "DevOps"],
+  "Sem categoria": ["Outros"],
+};
+
 export default function AdminProducts() {
   const [items, setItems] = React.useState<AdminProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
 
-  const [form, setForm] = React.useState<Partial<AdminProduct>>({
+  const [form, setForm] = React.useState<Partial<AdminProduct> & {
+    categoria?: string;
+    subcategoria?: string;
+  }>({
     title: "",
     description: "",
     mediaUrl: "",
     thumbnail: "",
+    categoria: "",
+    subcategoria: "",
     price: undefined,
     active: true,
   });
@@ -50,14 +78,19 @@ export default function AdminProducts() {
         description: form.description,
         mediaUrl: form.mediaUrl,
         thumbnail: form.thumbnail,
+        categoria: form.categoria,
+        subcategoria: form.subcategoria,
         price: form.price ? Number(form.price) : undefined,
         active: !!form.active,
-      });
+      } as any); // usamos "as any" até atualizar o tipo no adminApi.ts
+
       setForm({
         title: "",
         description: "",
         mediaUrl: "",
         thumbnail: "",
+        categoria: "",
+        subcategoria: "",
         price: undefined,
         active: true,
       });
@@ -149,6 +182,48 @@ export default function AdminProducts() {
           </div>
 
           <div className="field">
+            <label>Categoria</label>
+            <select
+              className="input"
+              value={form.categoria || ""}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  categoria: e.target.value,
+                  subcategoria: "", // reset subcategoria quando trocar categoria
+                }))
+              }
+            >
+              <option value="">Selecione</option>
+              {Object.keys(categorias).map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label>Subcategoria</label>
+            <select
+              className="input"
+              value={form.subcategoria || ""}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, subcategoria: e.target.value }))
+              }
+              disabled={!form.categoria}
+            >
+              <option value="">Selecione</option>
+              {form.categoria &&
+                categorias[form.categoria]?.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="field">
             <label>Preço (opcional)</label>
             <input
               className="input"
@@ -201,6 +276,11 @@ export default function AdminProducts() {
                         alt="thumb"
                         style={{ marginTop: 4, maxHeight: 60, borderRadius: 4 }}
                       />
+                    )}
+                    {p.categoria && (
+                      <div className="muted small">
+                        {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
+                      </div>
                     )}
                   </div>
                   <div className="row">
