@@ -63,32 +63,59 @@ export default function AdminLayout() {
             MYGLOBYX
           </Link>
 
-          <nav className="nav" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <nav className="nav" style={{ display: "flex", gap: 20, alignItems: "center" }}>
             {adminEmail && (
-              <div className="dropdown" style={{ position: "relative" }}>
-                <button
-                  onClick={() => setMenuOpen((prev) => !prev)}
-                  className="admin-menu-btn"
+              <>
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: "#00BFFF",
+                    fontSize: "14px",
+                    background: "#001E35",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    fontFamily: "monospace",
+                  }}
                 >
                   {adminEmail}
-                </button>
+                </span>
 
-                {menuOpen && (
-                  <div className="admin-submenu">
-                    <Link to="/admin/produtos" onClick={() => setMenuOpen(false)}>
-                      Produtos
-                    </Link>
-                    <Link to="/admin/liberacoes" onClick={() => setMenuOpen(false)}>
-                      Liberações
-                    </Link>
-                    <Link to="/admin/usuarios" onClick={() => setMenuOpen(false)}>
-                      Usuários
-                    </Link>
-                  </div>
-                )}
-              </div>
+                <div className="dropdown" style={{ position: "relative" }}>
+                  <button
+                    onClick={() => setMenuOpen((prev) => !prev)}
+                    className="admin-menu-btn"
+                  >
+                    Menu
+                  </button>
+
+                  {menuOpen && (
+                    <div className="admin-submenu">
+                      <Link to="/admin/produtos" onClick={() => setMenuOpen(false)}>
+                        Produtos
+                      </Link>
+                      <Link to="/admin/liberacoes" onClick={() => setMenuOpen(false)}>
+                        Liberações
+                      </Link>
+                      <Link to="/admin/usuarios" onClick={() => setMenuOpen(false)}>
+                        Usuários
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
-            <button className="btn btn--outline" onClick={handleAdminLogout}>
+            <button
+              className="btn"
+              style={{
+                padding: "6px 12px",
+                borderRadius: 6,
+                fontWeight: "bold",
+                color: "#00BFFF",
+                border: "1px solid #00BFFF",
+                background: "transparent",
+              }}
+              onClick={handleAdminLogout}
+            >
               Sair (Admin)
             </button>
           </nav>
