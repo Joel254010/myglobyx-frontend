@@ -1,4 +1,4 @@
-// src/pages/admin/AdminUsers.tsx
+// src/pages/admin/AdminUsers.tsx — atualizado com layout moderno e colunas claras
 import React from "react";
 import adminApi, { listAdminUsers } from "../../lib/adminApi";
 
@@ -57,7 +57,6 @@ export default function AdminUsers() {
     setLoading(true);
     setMsg(null);
     try {
-      // usa o cliente admin (token já vai no header)
       const resp = await listAdminUsers(p, limit);
       setData(resp);
       setPage(resp.page || p);
@@ -70,8 +69,7 @@ export default function AdminUsers() {
         forbidden: "Acesso negado. Esta conta não é admin.",
         HTTP_401: "Sessão expirada. Faça login como admin novamente.",
         HTTP_403: "Acesso negado. Conta sem permissão de administrador.",
-        HTTP_404:
-          "Rota não encontrada (token inválido/ausente também pode retornar 404).",
+        HTTP_404: "Rota não encontrada (token inválido/ausente também pode retornar 404).",
       };
       setMsg(map[code] || code);
     } finally {
@@ -86,37 +84,35 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <h1>Usuários</h1>
+      <h1 className="page-title">Painel de Usuários</h1>
 
-      {msg && (
-        <div className="alert alert--err" style={{ marginBottom: 12 }}>
-          {msg}
-        </div>
-      )}
+      {msg && <div className="alert alert--err">{msg}</div>}
 
-      <div className="card" style={{ padding: 12 }}>
-        <div className="row-between" style={{ marginBottom: 8 }}>
-          <h3 style={{ margin: 0 }}>Lista</h3>
+      <div className="card" style={{ padding: 16 }}>
+        <div className="row-between" style={{ marginBottom: 16 }}>
+          <h3 style={{ margin: 0 }}>Usuários Cadastrados</h3>
           <button className="btn" onClick={() => loadUsers(page)} disabled={loading}>
             {loading ? "Atualizando…" : "Atualizar"}
           </button>
         </div>
 
         <div className="table-responsive">
-          <table className="table">
+          <table className="table table-striped">
             <thead>
               <tr>
-                <th style={{ width: "28%" }}>Nome</th>
-                <th style={{ width: "30%" }}>E-mail</th>
-                <th style={{ width: "18%" }}>Telefone</th>
-                <th style={{ width: "12%" }}>Status</th>
-                <th style={{ width: "12%" }}>Criado</th>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Data de Cadastro</th>
               </tr>
             </thead>
             <tbody>
               {data?.users?.length ? (
-                data.users.map((u) => (
+                data.users.map((u, index) => (
                   <tr key={u.email}>
+                    <td>{(page - 1) * limit + index + 1}</td>
                     <td>{u.name || "—"}</td>
                     <td>{u.email}</td>
                     <td>{maskPhone(u.phone)}</td>
@@ -132,7 +128,7 @@ export default function AdminUsers() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="muted" style={{ textAlign: "center", padding: 16 }}>
+                  <td colSpan={6} className="muted" style={{ textAlign: "center", padding: 16 }}>
                     {loading ? "Carregando…" : "Nenhum usuário encontrado."}
                   </td>
                 </tr>
@@ -141,8 +137,7 @@ export default function AdminUsers() {
           </table>
         </div>
 
-        {/* Paginação */}
-        <div className="row-between" style={{ marginTop: 12 }}>
+        <div className="row-between" style={{ marginTop: 16 }}>
           <button className="btn" disabled={loading || page <= 1} onClick={() => loadUsers(page - 1)}>
             ◀ Anterior
           </button>
