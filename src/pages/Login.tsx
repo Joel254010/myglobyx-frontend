@@ -32,10 +32,11 @@ export default function Login() {
 
   // 🔐 Verifica se já tem sessão válida → redireciona
   useEffect(() => {
-    initAuthFromStorage(); // restaura token salvo (se houver)
+    initAuthFromStorage(); // restaura token salvo
     const token = getToken();
     const user = getUser();
-    if (token && user) {
+    if (token && user?.name) {
+      // Redireciona apenas se tiver token e nome válido
       nav(fromPath, { replace: true });
     }
   }, [fromPath, nav]);
@@ -76,7 +77,7 @@ export default function Login() {
       const { token, user } = await apiLogin(email, senha); // { token, user }
       setAuth(token, user); // salva token + user + configura headers
 
-      // 🌟 importante para MundoDigital
+      // 🌟 importante para exibir "Olá, Usuário"
       if (user?.name) {
         localStorage.setItem("myglobyx_user_name", user.name);
       }
@@ -94,10 +95,7 @@ export default function Login() {
       };
       setMsg({
         type: "err",
-        text:
-          map[code] ||
-          String(code) ||
-          "Não foi possível entrar. Tente novamente.",
+        text: map[code] || String(code) || "Não foi possível entrar. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -108,16 +106,10 @@ export default function Login() {
     <div className="page">
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">
-            MYGLOBYX
-          </Link>
+          <Link className="brand__logo" to="/">MYGLOBYX</Link>
           <nav className="nav">
-            <Link className="link" to="/como-funciona">
-              Como funciona
-            </Link>
-            <Link className="btn btn--primary" to="/criar-conta">
-              Criar conta
-            </Link>
+            <Link className="link" to="/como-funciona">Como funciona</Link>
+            <Link className="btn btn--primary" to="/criar-conta">Criar conta</Link>
           </nav>
         </div>
       </header>
@@ -174,45 +166,28 @@ export default function Login() {
                   <label className="check">
                     <input type="checkbox" disabled /> Lembrar de mim
                   </label>
-                  <a className="link" href="#recuperar">
-                    Esqueci a senha
-                  </a>
+                  <a className="link" href="#recuperar">Esqueci a senha</a>
                 </div>
               </div>
 
               {msg && (
-                <p className={msg.type === "ok" ? "success" : "error"}>
-                  {msg.text}
-                </p>
+                <p className={msg.type === "ok" ? "success" : "error"}>{msg.text}</p>
               )}
 
-              <button
-                className="btn btn--primary btn--lg btn--block"
-                disabled={loading}
-              >
+              <button className="btn btn--primary btn--lg btn--block" disabled={loading}>
                 {loading ? "Entrando…" : "Entrar"}
               </button>
 
-              <p
-                className="muted small"
-                style={{ textAlign: "center", marginTop: 12 }}
-              >
-                Não tem conta?{" "}
-                <Link className="link" to="/criar-conta">
-                  Crie agora
-                </Link>
+              <p className="muted small" style={{ textAlign: "center", marginTop: 12 }}>
+                Não tem conta? <Link className="link" to="/criar-conta">Crie agora</Link>
               </p>
 
               {msg?.type === "err" &&
                 msg.text.toLowerCase().includes("verific") &&
                 email && (
-                  <p
-                    className="muted small"
-                    style={{ textAlign: "center", marginTop: 8 }}
-                  >
-                    Verifique a pasta de <strong>Spam</strong> ou{" "}
-                    <strong>Promoções</strong>. Se precisar reenviar o e-mail,
-                    tente novamente em alguns minutos.
+                  <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
+                    Verifique a pasta de <strong>Spam</strong> ou <strong>Promoções</strong>. Se
+                    precisar reenviar o e-mail, tente novamente em alguns minutos.
                   </p>
                 )}
             </form>
