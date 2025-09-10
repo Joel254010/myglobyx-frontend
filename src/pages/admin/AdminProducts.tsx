@@ -82,7 +82,7 @@ export default function AdminProducts() {
         subcategoria: form.subcategoria,
         price: form.price ? Number(form.price) : undefined,
         active: !!form.active,
-      } as any); // usamos "as any" até atualizar o tipo no adminApi.ts
+      } as any);
 
       setForm({
         title: "",
@@ -95,7 +95,7 @@ export default function AdminProducts() {
         active: true,
       });
       await refresh();
-      setMsg("Produto criado.");
+      setMsg("✅ Produto criado com sucesso.");
     } catch (e: any) {
       setMsg(e?.message || "Erro ao criar produto");
     }
@@ -121,16 +121,18 @@ export default function AdminProducts() {
   }
 
   return (
-    <div>
-      <h1>Produtos</h1>
+    <div className="admin-produtos fundo-feed">
+      <h1 className="titulo-admin">Gerenciar Produtos</h1>
+
       {msg && (
         <div className="alert alert--ok" style={{ marginBottom: 12 }}>
           {msg}
         </div>
       )}
 
-      <form onSubmit={onCreate} className="card" style={{ padding: 12, marginBottom: 16 }}>
-        <h3>Novo produto</h3>
+      {/* Formulário */}
+      <form onSubmit={onCreate} className="card" style={{ padding: 20, marginBottom: 20 }}>
+        <h3 style={{ marginBottom: 12 }}>Novo produto</h3>
         <div className="form-grid">
           <div className="field field--full">
             <label>Título</label>
@@ -143,8 +145,9 @@ export default function AdminProducts() {
 
           <div className="field field--full">
             <label>Descrição</label>
-            <input
+            <textarea
               className="input"
+              rows={3}
               value={form.description || ""}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
@@ -173,9 +176,9 @@ export default function AdminProducts() {
                 alt="Prévia da thumbnail"
                 style={{
                   marginTop: 8,
-                  maxWidth: "100%",
+                  maxWidth: 200,
                   borderRadius: 8,
-                  boxShadow: "0 0 0 1px #ddd",
+                  boxShadow: "0 0 4px rgba(0,0,0,0.3)",
                 }}
               />
             )}
@@ -190,7 +193,7 @@ export default function AdminProducts() {
                 setForm((f) => ({
                   ...f,
                   categoria: e.target.value,
-                  subcategoria: "", // reset subcategoria quando trocar categoria
+                  subcategoria: "",
                 }))
               }
             >
@@ -251,49 +254,63 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        <div className="actions">
+        <div className="actions" style={{ marginTop: 16 }}>
           <button className="btn btn--primary">Criar</button>
         </div>
       </form>
 
+      {/* Lista */}
       {loading ? (
         <div>Carregando…</div>
       ) : (
-        <div className="card" style={{ padding: 12 }}>
-          <h3>Lista</h3>
+        <div className="grid-produtos">
           {items.length === 0 ? (
-            <p className="muted">Nenhum produto.</p>
+            <p className="muted">Nenhum produto cadastrado.</p>
           ) : (
-            <ul className="list">
-              {items.map((p) => (
-                <li key={p.id} className="list__row">
-                  <div>
-                    <b>{p.title}</b> {p.active ? "· ativo" : "· inativo"}
-                    <div className="muted small">{p.mediaUrl}</div>
-                    {p.thumbnail && (
-                      <img
-                        src={p.thumbnail}
-                        alt="thumb"
-                        style={{ marginTop: 4, maxHeight: 60, borderRadius: 4 }}
-                      />
-                    )}
-                    {p.categoria && (
-                      <div className="muted small">
-                        {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
-                      </div>
-                    )}
-                  </div>
-                  <div className="row">
-                    <button className="btn btn--ghost" onClick={() => toggleActive(p)}>
-                      {p.active ? "Desativar" : "Ativar"}
-                    </button>
-                    <button className="btn btn--outline" onClick={() => remove(p.id)}>
-                      Excluir
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            items.map((p) => (
+              <div key={p.id} className="card card-produto">
+                {p.thumbnail && (
+                  <img
+                    src={p.thumbnail}
+                    alt={p.title}
+                    className="thumb-produto"
+                  />
+                )}
+                <div className="conteudo-produto">
+                  <h4>{p.title}</h4>
+                  {p.categoria && (
+                    <p className="muted small">
+                      {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
+                    </p>
+                  )}
+                  {p.price && (
+                    <p>
+                      💰 <b>R$ {p.price.toFixed(2)}</b>
+                    </p>
+                  )}
+                  <p className="muted small">{p.description}</p>
+                  <span
+                    className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}
+                  >
+                    {p.active ? "Ativo" : "Inativo"}
+                  </span>
+                </div>
+                <div className="acoes-produto">
+                  <button
+                    className="btn btn--ghost"
+                    onClick={() => toggleActive(p)}
+                  >
+                    {p.active ? "Desativar" : "Ativar"}
+                  </button>
+                  <button
+                    className="btn btn--outline"
+                    onClick={() => remove(p.id)}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}

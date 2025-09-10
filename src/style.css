@@ -644,3 +644,35 @@ body{
 .modal-content .btn:hover {
   background-color: #1d4ed8;
 }
+
+.grid-produtos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card-produto {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.thumb-produto {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.conteudo-produto {
+  padding: 12px;
+  flex: 1;
+}
+
+.acoes-produto {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-top: 1px solid #ddd;
+}
