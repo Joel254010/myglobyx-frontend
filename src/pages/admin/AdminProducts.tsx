@@ -1,11 +1,25 @@
 import React from "react";
-import { AdminProduct, listProducts, createProduct, updateProduct, deleteProduct } from "../../lib/adminApi";
+import {
+  AdminProduct,
+  listProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "../../lib/adminApi";
 
 export default function AdminProducts() {
   const [items, setItems] = React.useState<AdminProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [form, setForm] = React.useState<Partial<AdminProduct>>({ title: "", description: "", mediaUrl: "", price: undefined, active: true });
   const [msg, setMsg] = React.useState<string | null>(null);
+
+  const [form, setForm] = React.useState<Partial<AdminProduct>>({
+    title: "",
+    description: "",
+    mediaUrl: "",
+    thumbnail: "",
+    price: undefined,
+    active: true,
+  });
 
   async function refresh() {
     setLoading(true);
@@ -19,21 +33,34 @@ export default function AdminProducts() {
     }
   }
 
-  React.useEffect(() => { refresh(); }, []);
+  React.useEffect(() => {
+    refresh();
+  }, []);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    if (!form.title?.trim()) { setMsg("Informe o título"); return; }
+    if (!form.title?.trim()) {
+      setMsg("Informe o título");
+      return;
+    }
     try {
       await createProduct({
         title: form.title,
         description: form.description,
         mediaUrl: form.mediaUrl,
+        thumbnail: form.thumbnail,
         price: form.price ? Number(form.price) : undefined,
         active: !!form.active,
       });
-      setForm({ title: "", description: "", mediaUrl: "", price: undefined, active: true });
+      setForm({
+        title: "",
+        description: "",
+        mediaUrl: "",
+        thumbnail: "",
+        price: undefined,
+        active: true,
+      });
       await refresh();
       setMsg("Produto criado.");
     } catch (e: any) {
@@ -63,36 +90,95 @@ export default function AdminProducts() {
   return (
     <div>
       <h1>Produtos</h1>
-      {msg && <div className="alert alert--ok" style={{ marginBottom: 12 }}>{msg}</div>}
+      {msg && (
+        <div className="alert alert--ok" style={{ marginBottom: 12 }}>
+          {msg}
+        </div>
+      )}
 
       <form onSubmit={onCreate} className="card" style={{ padding: 12, marginBottom: 16 }}>
         <h3>Novo produto</h3>
         <div className="form-grid">
           <div className="field field--full">
             <label>Título</label>
-            <input className="input" value={form.title || ""} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} />
+            <input
+              className="input"
+              value={form.title || ""}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            />
           </div>
+
           <div className="field field--full">
             <label>Descrição</label>
-            <input className="input" value={form.description || ""} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} />
+            <input
+              className="input"
+              value={form.description || ""}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
           </div>
+
           <div className="field field--full">
             <label>URL do conteúdo (vídeo/pdf/link)</label>
-            <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm(f => ({ ...f, mediaUrl: e.target.value }))} />
+            <input
+              className="input"
+              value={form.mediaUrl || ""}
+              onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))}
+            />
           </div>
+
+          <div className="field field--full">
+            <label>URL da Thumbnail (imagem de capa)</label>
+            <input
+              className="input"
+              value={form.thumbnail || ""}
+              onChange={(e) => setForm((f) => ({ ...f, thumbnail: e.target.value }))}
+              placeholder="https://..."
+            />
+            {form.thumbnail && (
+              <img
+                src={form.thumbnail}
+                alt="Prévia da thumbnail"
+                style={{
+                  marginTop: 8,
+                  maxWidth: "100%",
+                  borderRadius: 8,
+                  boxShadow: "0 0 0 1px #ddd",
+                }}
+              />
+            )}
+          </div>
+
           <div className="field">
             <label>Preço (opcional)</label>
-            <input className="input" type="number" step="0.01" value={form.price as any || ""} onChange={(e) => setForm(f => ({ ...f, price: e.target.value as any }))} />
+            <input
+              className="input"
+              type="number"
+              step="0.01"
+              value={form.price as any || ""}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, price: e.target.value as any }))
+              }
+            />
           </div>
+
           <div className="field">
             <label>Status</label>
-            <select className="input" value={form.active ? "1" : "0"} onChange={(e) => setForm(f => ({ ...f, active: e.target.value === "1" }))}>
+            <select
+              className="input"
+              value={form.active ? "1" : "0"}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, active: e.target.value === "1" }))
+              }
+            >
               <option value="1">Ativo</option>
               <option value="0">Inativo</option>
             </select>
           </div>
         </div>
-        <div className="actions"><button className="btn btn--primary">Criar</button></div>
+
+        <div className="actions">
+          <button className="btn btn--primary">Criar</button>
+        </div>
       </form>
 
       {loading ? (
@@ -104,15 +190,26 @@ export default function AdminProducts() {
             <p className="muted">Nenhum produto.</p>
           ) : (
             <ul className="list">
-              {items.map(p => (
+              {items.map((p) => (
                 <li key={p.id} className="list__row">
                   <div>
                     <b>{p.title}</b> {p.active ? "· ativo" : "· inativo"}
                     <div className="muted small">{p.mediaUrl}</div>
+                    {p.thumbnail && (
+                      <img
+                        src={p.thumbnail}
+                        alt="thumb"
+                        style={{ marginTop: 4, maxHeight: 60, borderRadius: 4 }}
+                      />
+                    )}
                   </div>
                   <div className="row">
-                    <button className="btn btn--ghost" onClick={() => toggleActive(p)}>{p.active ? "Desativar" : "Ativar"}</button>
-                    <button className="btn btn--outline" onClick={() => remove(p.id)}>Excluir</button>
+                    <button className="btn btn--ghost" onClick={() => toggleActive(p)}>
+                      {p.active ? "Desativar" : "Ativar"}
+                    </button>
+                    <button className="btn btn--outline" onClick={() => remove(p.id)}>
+                      Excluir
+                    </button>
                   </div>
                 </li>
               ))}

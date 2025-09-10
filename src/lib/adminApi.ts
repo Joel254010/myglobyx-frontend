@@ -134,6 +134,7 @@ export type AdminProduct = {
   slug: string;
   description?: string;
   mediaUrl?: string;
+  thumbnail?: string; // ✅ Adicionado aqui
   price?: number;
   active: boolean;
   createdAt: string;
