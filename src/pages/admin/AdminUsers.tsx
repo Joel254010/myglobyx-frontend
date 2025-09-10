@@ -1,10 +1,7 @@
-// src/pages/admin/AdminUsers.tsx — atualizado com layout mais próximo do exemplo enviado
 import React from "react";
-import adminApi, { listAdminUsers } from "../../lib/adminApi";
-
+import adminApi, { getProdutosDoUsuario, listAdminUsers, AdminProduct } from "../../lib/adminApi";
 
 // Tipagens
-
 type UserRow = {
   name: string;
   email: string;
@@ -52,6 +49,12 @@ export default function AdminUsers() {
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
 
+  // Modal
+  const [modalEmail, setModalEmail] = React.useState<string | null>(null);
+  const [modalProdutos, setModalProdutos] = React.useState<AdminProduct[] | null>(null);
+  const [modalLoading, setModalLoading] = React.useState(false);
+  const [modalError, setModalError] = React.useState<string | null>(null);
+
   const total = data?.total ?? data?.users?.length ?? 0;
   const totalPages =
     data?.limit && data?.total
@@ -85,6 +88,29 @@ export default function AdminUsers() {
   React.useEffect(() => {
     loadUsers(1);
   }, []);
+
+  async function abrirModal(email: string) {
+    setModalEmail(email);
+    setModalProdutos(null);
+    setModalLoading(true);
+    setModalError(null);
+
+    try {
+      const produtos = await getProdutosDoUsuario(email);
+      setModalProdutos(produtos);
+    } catch (e: any) {
+      setModalError(e?.message || "Erro ao carregar produtos");
+    } finally {
+      setModalLoading(false);
+    }
+  }
+
+  function fecharModal() {
+    setModalEmail(null);
+    setModalProdutos(null);
+    setModalLoading(false);
+    setModalError(null);
+  }
 
   return (
     <div className="admin-usuarios fundo-feed">
@@ -128,17 +154,17 @@ export default function AdminUsers() {
                       )}
                     </td>
                     <td>
-  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span>{fmtDate(u.createdAt)}</span>
-    <button
-      className="btn btn--small"
-      style={{ marginTop: 4, fontSize: 12, padding: "2px 6px" }}
-      onClick={() => alert(`Abrir produtos adquiridos por: ${u.email}`)}
-    >
-      Produtos Adquiridos
-    </button>
-  </div>
-</td>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span>{fmtDate(u.createdAt)}</span>
+                        <button
+                          className="btn btn--small"
+                          style={{ marginTop: 4, fontSize: 12, padding: "2px 6px" }}
+                          onClick={() => abrirModal(u.email)}
+                        >
+                          Produtos Adquiridos
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -164,6 +190,45 @@ export default function AdminUsers() {
           </button>
         </div>
       </div>
+
+      {/* Modal */}
+      {modalEmail && (
+        <div className="modal-backdrop" onClick={fecharModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ marginBottom: 12 }}>
+              Produtos de <span style={{ fontWeight: 600 }}>{modalEmail}</span>
+            </h2>
+
+            {modalLoading && <p>🔄 Carregando produtos…</p>}
+            {modalError && <p className="alert alert--err">{modalError}</p>}
+            {!modalLoading && !modalError && (
+              <>
+                {modalProdutos?.length ? (
+                  <ul style={{ paddingLeft: 20, maxHeight: 300, overflowY: "auto" }}>
+                    {modalProdutos.map((p) => (
+                      <li key={p.id} style={{ marginBottom: 8 }}>
+                        <strong>{p.title}</strong> {p.active ? "✅" : "⛔"}<br />
+                        <small>Slug: {p.slug}</small><br />
+                        {p.mediaUrl && (
+                          <a href={p.mediaUrl} target="_blank" rel="noopener noreferrer">
+                            📎 Abrir mídia
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Este usuário ainda não possui produtos.</p>
+                )}
+              </>
+            )}
+
+            <div style={{ textAlign: "right", marginTop: 20 }}>
+              <button className="btn" onClick={fecharModal}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

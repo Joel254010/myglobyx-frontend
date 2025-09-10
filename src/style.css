@@ -586,3 +586,61 @@ body{
     transform: translateY(0);
   }
 }
+
+/* === Modal Backdrop === */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* === Modal Box === */
+.modal-content {
+  background: #121827;
+  color: #fff;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 0 0 1px #1f2937, 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* === Links dentro do modal === */
+.modal-content a {
+  color: #60a5fa;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+/* === Alertas de erro dentro do modal === */
+.modal-content .alert--err {
+  background-color: #f87171;
+  color: white;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+/* === Botão dentro do modal === */
+.modal-content .btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.modal-content .btn:hover {
+  background-color: #1d4ed8;
+}

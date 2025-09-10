@@ -63,7 +63,7 @@ adminApi.interceptors.response.use(
 
 export async function loginAdmin(email: string, password: string): Promise<{ token: string }> {
   const { data } = await adminApi.post<{ token: string }>(
-    "/admin/login", // ✅ já estava certo
+    "/admin/login",
     { email, password }
   );
   return data;
@@ -74,7 +74,7 @@ export async function getAdminPing(passedToken?: string | null) {
     ? { headers: { Authorization: `Bearer ${passedToken}` } }
     : undefined;
 
-  const { data } = await adminApi.get("/admin/ping", config); // ✅ corrigido
+  const { data } = await adminApi.get("/admin/ping", config);
   return data;
 }
 
@@ -199,6 +199,17 @@ export async function revokeAccess(email: string, productId: string) {
       productId
     )}`
   );
+}
+
+// ========================
+// 🔍 NOVA FUNÇÃO – Buscar produtos de um usuário
+// ========================
+
+export async function getProdutosDoUsuario(email: string): Promise<AdminProduct[]> {
+  const grants = await listGrants(email);
+  const productIds = grants.map((g) => g.productId);
+  const allProducts = await listProducts();
+  return allProducts.filter((p) => productIds.includes(p.id));
 }
 
 // ========================
