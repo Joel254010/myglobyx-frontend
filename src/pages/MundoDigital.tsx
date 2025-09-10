@@ -1,20 +1,38 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { listProducts, AdminProduct } from "../lib/adminApi";
 
 const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
 function logoutLocal() {
   TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
-  // Se quiser limpar também outros dados de sessão, faça aqui.
 }
 
 export default function MundoDigital() {
   const navigate = useNavigate();
+  const [produtos, setProdutos] = React.useState<AdminProduct[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [msg, setMsg] = React.useState<string | null>(null);
 
   function handleLogout() {
     logoutLocal();
     navigate("/", { replace: true });
   }
+
+  React.useEffect(() => {
+    async function fetchProdutos() {
+      try {
+        const items = await listProducts();
+        // Apenas os ativos e ordenados pelo createdAt
+        setProdutos(items.filter(p => p.active));
+      } catch (e: any) {
+        setMsg(e?.message || "Erro ao carregar produtos");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProdutos();
+  }, []);
 
   return (
     <div className="page">
@@ -24,7 +42,7 @@ export default function MundoDigital() {
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
           <nav className="nav">
             <Link className="link" to="/app/meus-produtos">Meus Produtos</Link>
-            <Link className="link" to="/app/meus-dados">Meus Dados</Link> {/* ✅ NOVO */}
+            <Link className="link" to="/app/meus-dados">Meus Dados</Link>
             <Link className="link" to="/suporte">Suporte</Link>
             <button className="btn btn--outline" onClick={handleLogout}>Sair</button>
           </nav>
@@ -88,25 +106,38 @@ export default function MundoDigital() {
       <section id="destaques" className="app">
         <div className="container">
           <h2>Destaques</h2>
+
+          {msg && <div className="alert alert--err">{msg}</div>}
+          {loading && <p>Carregando produtos...</p>}
+
+          {!loading && produtos.length === 0 && (
+            <p className="muted">Nenhum produto disponível no momento.</p>
+          )}
+
           <div className="grid" style={{ marginTop: 12 }}>
-            <article className="card">
-              <span className="tag">E-book</span>
-              <h3>Guia Black: primeiros passos</h3>
-              <p>Um e-book introdutório com estratégias práticas para começar.</p>
-              <button className="btn btn--primary">Saiba mais</button>
-            </article>
-            <article className="card">
-              <span className="tag">Curso</span>
-              <h3>Venda Digital Express</h3>
-              <p>Mini-curso de 10 minutos para você destravar resultados.</p>
-              <button className="btn btn--primary">Saiba mais</button>
-            </article>
-            <article className="card">
-              <span className="tag">Premium</span>
-              <h3>Conteúdos Black</h3>
-              <p>Materiais exclusivos e atualizados com frequência.</p>
-              <button className="btn btn--primary">Saiba mais</button>
-            </article>
+            {produtos.map((p) => (
+              <article key={p.id} className="card">
+                {p.categoria && (
+                  <span className="tag">
+                    {p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}
+                  </span>
+                )}
+                {p.thumbnail && (
+                  <img
+                    src={p.thumbnail}
+                    alt={p.title}
+                    className="thumb"
+                    style={{ borderRadius: 6, marginBottom: 8 }}
+                  />
+                )}
+                <h3>{p.title}</h3>
+                {p.description && <p>{p.description}</p>}
+                {p.price !== undefined && (
+                  <p><b>R$ {p.price.toFixed(2)}</b></p>
+                )}
+                <button className="btn btn--primary">Saiba mais</button>
+              </article>
+            ))}
           </div>
         </div>
       </section>
