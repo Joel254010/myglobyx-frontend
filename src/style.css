@@ -758,3 +758,72 @@ body{
 .acoes-produto .btn {
   flex: 1;
 }
+
+/* 🔽 Dropdown de menu do usuário no Mundo Digital */
+.admin-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-dropdown-button {
+  background: transparent;
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-dropdown-button:hover {
+  color: var(--mx-blue);
+}
+
+.admin-dropdown-menu {
+  position: absolute;
+  top: 125%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 8px 0;
+  border-radius: 8px;
+  z-index: 1000;
+  min-width: 180px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.admin-dropdown-menu a,
+.admin-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.95rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.admin-dropdown-menu a:hover,
+.admin-dropdown-menu button:hover {
+  background-color: #f5f7fb;
+  color: var(--mx-blue);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

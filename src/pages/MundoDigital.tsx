@@ -6,6 +6,7 @@ const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
 function logoutLocal() {
   TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
+  localStorage.removeItem("myglobyx_user_name");
 }
 
 export default function MundoDigital() {
@@ -14,8 +15,8 @@ export default function MundoDigital() {
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
 
-  // Nome do usuário (pegando de localStorage ou outro lugar)
-  const [userName] = React.useState(
+  // Nome do usuário
+  const [userName, setUserName] = React.useState(
     localStorage.getItem("myglobyx_user_name") || "Usuário"
   );
 
@@ -26,6 +27,7 @@ export default function MundoDigital() {
     navigate("/", { replace: true });
   }
 
+  // 🔹 Buscar produtos
   React.useEffect(() => {
     async function fetchProdutos() {
       try {
@@ -38,6 +40,32 @@ export default function MundoDigital() {
       }
     }
     fetchProdutos();
+  }, []);
+
+  // 🔹 Buscar perfil do usuário
+  React.useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const token = localStorage.getItem("myglobyx_token");
+        if (!token) return;
+
+        const res = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.name) {
+            setUserName(data.name);
+            localStorage.setItem("myglobyx_user_name", data.name);
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao buscar perfil:", e);
+      }
+    }
+
+    fetchProfile();
   }, []);
 
   return (
