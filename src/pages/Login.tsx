@@ -48,7 +48,10 @@ export default function Login() {
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (q.get("verificado") === "1") {
-      setMsg({ type: "ok", text: "E-mail verificado com sucesso! Faça login para continuar." });
+      setMsg({
+        type: "ok",
+        text: "E-mail verificado com sucesso! Faça login para continuar.",
+      });
       const url = new URL(window.location.href);
       url.searchParams.delete("verificado");
       window.history.replaceState({}, "", url.toString());
@@ -72,6 +75,12 @@ export default function Login() {
       setLoading(true);
       const { token, user } = await apiLogin(email, senha); // { token, user }
       setAuth(token, user); // salva em todas as chaves + configura Authorization no axios
+
+      // 🔑 salva nome do usuário para uso no MundoDigital
+      if (user?.name) {
+        localStorage.setItem("myglobyx_user_name", user.name);
+      }
+
       setMsg({ type: "ok", text: "Login realizado! Redirecionando…" });
       nav(fromPath, { replace: true });
     } catch (err) {
@@ -96,10 +105,16 @@ export default function Login() {
     <div className="page">
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">MYGLOBYX</Link>
+          <Link className="brand__logo" to="/">
+            MYGLOBYX
+          </Link>
           <nav className="nav">
-            <Link className="link" to="/como-funciona">Como funciona</Link>
-            <Link className="btn btn--primary" to="/criar-conta">Criar conta</Link>
+            <Link className="link" to="/como-funciona">
+              Como funciona
+            </Link>
+            <Link className="btn btn--primary" to="/criar-conta">
+              Criar conta
+            </Link>
           </nav>
         </div>
       </header>
@@ -156,21 +171,27 @@ export default function Login() {
                   <label className="check">
                     <input type="checkbox" disabled /> Lembrar de mim
                   </label>
-                  <a className="link" href="#recuperar">Esqueci a senha</a>
+                  <a className="link" href="#recuperar">
+                    Esqueci a senha
+                  </a>
                 </div>
               </div>
 
-              {msg && <p className={msg.type === "ok" ? "success" : "error"}>{msg.text}</p>}
+              {msg && (
+                <p className={msg.type === "ok" ? "success" : "error"}>{msg.text}</p>
+              )}
 
               <button className="btn btn--primary btn--lg btn--block" disabled={loading}>
                 {loading ? "Entrando…" : "Entrar"}
               </button>
 
               <p className="muted small" style={{ textAlign: "center", marginTop: 12 }}>
-                Não tem conta? <Link className="link" to="/criar-conta">Crie agora</Link>
+                Não tem conta?{" "}
+                <Link className="link" to="/criar-conta">
+                  Crie agora
+                </Link>
               </p>
 
-              {/* Dica discreta para casos de não-verificado */}
               {msg?.type === "err" && msg.text.toLowerCase().includes("verific") && email && (
                 <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
                   Verifique a pasta de <strong>Spam</strong> ou <strong>Promoções</strong>.{" "}
@@ -184,7 +205,9 @@ export default function Login() {
 
       <footer className="footer">
         <div className="container footer__inner">
-          <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
+          <small>
+            © {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.
+          </small>
           <div className="footer__links">
             <Link to="/termos">Termos</Link>
             <Link to="/privacidade">Privacidade</Link>
