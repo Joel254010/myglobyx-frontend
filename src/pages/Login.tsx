@@ -2,26 +2,20 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { apiLogin } from "../lib/api";
-import { getToken, setAuth, initAuthFromStorage } from "../lib/auth";
+import { getToken, getUser, setAuth, initAuthFromStorage } from "../lib/auth";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
 const getApiErrorMessageLocal = (err: unknown, fallback = "Erro inesperado.") => {
   const e = err as any;
-
-  // 403 explícito do backend (exigindo verificação)
   if (e?.response?.status === 403) return "not_verified";
-
-  // mensagens que podem vir no payload
   const code = e?.response?.data?.error || e?.message;
   if (!code) return fallback;
-
   const norm = String(code).toLowerCase();
   if (norm.includes("verific")) return "not_verified";
   if (norm.includes("invalid_credentials")) return "invalid_credentials";
   if (norm.includes("unauthorized")) return "unauthorized";
   if (norm.includes("network")) return "network_error";
-
   return code || fallback;
 };
 
@@ -36,15 +30,17 @@ export default function Login() {
   const [msg, setMsg] = useState<Msg>(null);
   const [loading, setLoading] = useState(false);
 
-  // Bootstrap do Authorization + redireciona se já logado
+  // 🔐 Verifica se já tem sessão válida → redireciona
   useEffect(() => {
-    initAuthFromStorage();
-    const existing = getToken();
-    if (existing) nav(fromPath, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    initAuthFromStorage(); // restaura token salvo (se houver)
+    const token = getToken();
+    const user = getUser();
+    if (token && user) {
+      nav(fromPath, { replace: true });
+    }
+  }, [fromPath, nav]);
 
-  // Aviso quando vier de /api/auth/verify → /login?verificado=1
+  // ✅ Alerta de verificação de e-mail com sucesso
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (q.get("verificado") === "1") {
@@ -58,7 +54,8 @@ export default function Login() {
     }
   }, [location.search]);
 
-  const validarEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
+  const validarEmail = (v: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.toLowerCase());
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,15 +65,18 @@ export default function Login() {
       return setMsg({ type: "err", text: "Digite um e-mail válido." });
     }
     if (senha.length < 6) {
-      return setMsg({ type: "err", text: "A senha precisa ter pelo menos 6 caracteres." });
+      return setMsg({
+        type: "err",
+        text: "A senha precisa ter pelo menos 6 caracteres.",
+      });
     }
 
     try {
       setLoading(true);
       const { token, user } = await apiLogin(email, senha); // { token, user }
-      setAuth(token, user); // salva em todas as chaves + configura Authorization no axios
+      setAuth(token, user); // salva token + user + configura headers
 
-      // 🔑 salva nome do usuário para uso no MundoDigital
+      // 🌟 importante para MundoDigital
       if (user?.name) {
         localStorage.setItem("myglobyx_user_name", user.name);
       }
@@ -94,7 +94,10 @@ export default function Login() {
       };
       setMsg({
         type: "err",
-        text: map[code] || String(code) || "Não foi possível entrar. Tente novamente.",
+        text:
+          map[code] ||
+          String(code) ||
+          "Não foi possível entrar. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -178,26 +181,40 @@ export default function Login() {
               </div>
 
               {msg && (
-                <p className={msg.type === "ok" ? "success" : "error"}>{msg.text}</p>
+                <p className={msg.type === "ok" ? "success" : "error"}>
+                  {msg.text}
+                </p>
               )}
 
-              <button className="btn btn--primary btn--lg btn--block" disabled={loading}>
+              <button
+                className="btn btn--primary btn--lg btn--block"
+                disabled={loading}
+              >
                 {loading ? "Entrando…" : "Entrar"}
               </button>
 
-              <p className="muted small" style={{ textAlign: "center", marginTop: 12 }}>
+              <p
+                className="muted small"
+                style={{ textAlign: "center", marginTop: 12 }}
+              >
                 Não tem conta?{" "}
                 <Link className="link" to="/criar-conta">
                   Crie agora
                 </Link>
               </p>
 
-              {msg?.type === "err" && msg.text.toLowerCase().includes("verific") && email && (
-                <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
-                  Verifique a pasta de <strong>Spam</strong> ou <strong>Promoções</strong>.{" "}
-                  Se precisar reenviar o e-mail, tente novamente em alguns minutos.
-                </p>
-              )}
+              {msg?.type === "err" &&
+                msg.text.toLowerCase().includes("verific") &&
+                email && (
+                  <p
+                    className="muted small"
+                    style={{ textAlign: "center", marginTop: 8 }}
+                  >
+                    Verifique a pasta de <strong>Spam</strong> ou{" "}
+                    <strong>Promoções</strong>. Se precisar reenviar o e-mail,
+                    tente novamente em alguns minutos.
+                  </p>
+                )}
             </form>
           </div>
         </div>
