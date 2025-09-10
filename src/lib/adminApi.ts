@@ -134,7 +134,9 @@ export type AdminProduct = {
   slug: string;
   description?: string;
   mediaUrl?: string;
-  thumbnail?: string; // ✅ Adicionado aqui
+  thumbnail?: string;       // ✅ imagem de capa
+  categoria?: string;       // ✅ categoria adicionada
+  subcategoria?: string;    // ✅ subcategoria adicionada
   price?: number;
   active: boolean;
   createdAt: string;
