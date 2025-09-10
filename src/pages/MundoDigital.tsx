@@ -14,6 +14,13 @@ export default function MundoDigital() {
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
 
+  // Nome do usuário (pegando de localStorage ou outro lugar)
+  const [userName] = React.useState(
+    localStorage.getItem("myglobyx_user_name") || "Usuário"
+  );
+
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
   function handleLogout() {
     logoutLocal();
     navigate("/", { replace: true });
@@ -39,12 +46,34 @@ export default function MundoDigital() {
       <header className="header">
         <div className="container header__inner">
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
-          <nav className="nav">
-            <Link className="link" to="/app/meus-produtos">Meus Produtos</Link>
-            <Link className="link" to="/app/meus-dados">Meus Dados</Link>
-            <Link className="link" to="/suporte">Suporte</Link>
-            <button className="btn btn--outline" onClick={handleLogout}>Sair</button>
-          </nav>
+          <div className="admin-dropdown">
+            <button
+              className="admin-dropdown-button"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              👋 Olá, {userName}
+            </button>
+            {menuOpen && (
+              <div className="admin-dropdown-menu">
+                <Link to="/app/meus-produtos">Meus Produtos</Link>
+                <Link to="/app/meus-dados">Meus Dados</Link>
+                <Link to="/suporte">Suporte</Link>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  Sair
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -132,14 +161,14 @@ export default function MundoDigital() {
                   <h3>{p.title}</h3>
                   {p.description && <p>{p.description}</p>}
                   {p.price !== undefined && (
-                    <p className="preco-produto">
-                      R$ {p.price.toFixed(2)}
-                    </p>
+                    <p className="preco-produto">R$ {p.price.toFixed(2)}</p>
                   )}
                 </div>
                 <div className="acoes-produto">
                   <button className="btn btn--primary">Saiba mais</button>
-                  <Link className="btn btn--outline" to="/app/meus-produtos">Comprar</Link>
+                  <Link className="btn btn--outline" to="/app/meus-produtos">
+                    Comprar
+                  </Link>
                 </div>
               </article>
             ))}
