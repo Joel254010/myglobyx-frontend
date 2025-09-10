@@ -1,6 +1,9 @@
-// src/pages/admin/AdminUsers.tsx — atualizado com layout moderno e colunas claras
+// src/pages/admin/AdminUsers.tsx — atualizado com layout mais próximo do exemplo enviado
 import React from "react";
 import adminApi, { listAdminUsers } from "../../lib/adminApi";
+
+
+// Tipagens
 
 type UserRow = {
   name: string;
@@ -17,6 +20,7 @@ type ListResp = {
   users: UserRow[];
 };
 
+// Utilitários
 function maskPhone(v?: string) {
   if (!v) return "—";
   const d = v.replace(/\D/g, "");
@@ -40,6 +44,7 @@ function fmtDate(d?: string | Date) {
   });
 }
 
+// Componente principal
 export default function AdminUsers() {
   const [data, setData] = React.useState<ListResp | null>(null);
   const [page, setPage] = React.useState(1);
@@ -79,25 +84,24 @@ export default function AdminUsers() {
 
   React.useEffect(() => {
     loadUsers(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div>
-      <h1 className="page-title">Painel de Usuários</h1>
+    <div className="admin-usuarios fundo-feed">
+      <h1 className="titulo-admin">Painel de Usuários</h1>
 
       {msg && <div className="alert alert--err">{msg}</div>}
 
-      <div className="card" style={{ padding: 16 }}>
-        <div className="row-between" style={{ marginBottom: 16 }}>
-          <h3 style={{ margin: 0 }}>Usuários Cadastrados</h3>
+      <div className="caixa-admin">
+        <div className="topo-box">
+          <h3>Usuários Cadastrados</h3>
           <button className="btn" onClick={() => loadUsers(page)} disabled={loading}>
             {loading ? "Atualizando…" : "Atualizar"}
           </button>
         </div>
 
-        <div className="table-responsive">
-          <table className="table table-striped">
+        <div className="table-scroll">
+          <table className="tabela-admin">
             <thead>
               <tr>
                 <th>ID</th>
@@ -105,14 +109,14 @@ export default function AdminUsers() {
                 <th>E-mail</th>
                 <th>Telefone</th>
                 <th>Status</th>
-                <th>Data de Cadastro</th>
+                <th>Criado em</th>
               </tr>
             </thead>
             <tbody>
               {data?.users?.length ? (
-                data.users.map((u, index) => (
+                data.users.map((u, i) => (
                   <tr key={u.email}>
-                    <td>{(page - 1) * limit + index + 1}</td>
+                    <td>{(page - 1) * limit + i + 1}</td>
                     <td>{u.name || "—"}</td>
                     <td>{u.email}</td>
                     <td>{maskPhone(u.phone)}</td>
@@ -128,7 +132,7 @@ export default function AdminUsers() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="muted" style={{ textAlign: "center", padding: 16 }}>
+                  <td colSpan={6} style={{ textAlign: "center", padding: 16 }}>
                     {loading ? "Carregando…" : "Nenhum usuário encontrado."}
                   </td>
                 </tr>
@@ -137,7 +141,7 @@ export default function AdminUsers() {
           </table>
         </div>
 
-        <div className="row-between" style={{ marginTop: 16 }}>
+        <div className="paginacao-box">
           <button className="btn" disabled={loading || page <= 1} onClick={() => loadUsers(page - 1)}>
             ◀ Anterior
           </button>
