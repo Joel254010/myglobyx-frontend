@@ -23,8 +23,7 @@ export default function MundoDigital() {
     async function fetchProdutos() {
       try {
         const items = await listProducts();
-        // Apenas os ativos e ordenados pelo createdAt
-        setProdutos(items.filter(p => p.active));
+        setProdutos(items.filter((p) => p.active));
       } catch (e: any) {
         setMsg(e?.message || "Erro ao carregar produtos");
       } finally {
@@ -114,28 +113,34 @@ export default function MundoDigital() {
             <p className="muted">Nenhum produto disponível no momento.</p>
           )}
 
-          <div className="grid" style={{ marginTop: 12 }}>
+          <div className="grid-produtos">
             {produtos.map((p) => (
-              <article key={p.id} className="card">
-                {p.categoria && (
-                  <span className="tag">
-                    {p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}
-                  </span>
-                )}
+              <article key={p.id} className="card-produto">
                 {p.thumbnail && (
                   <img
                     src={p.thumbnail}
                     alt={p.title}
-                    className="thumb"
-                    style={{ borderRadius: 6, marginBottom: 8 }}
+                    className="thumb-produto"
                   />
                 )}
-                <h3>{p.title}</h3>
-                {p.description && <p>{p.description}</p>}
-                {p.price !== undefined && (
-                  <p><b>R$ {p.price.toFixed(2)}</b></p>
-                )}
-                <button className="btn btn--primary">Saiba mais</button>
+                <div className="conteudo-produto">
+                  {p.categoria && (
+                    <span className="tag-produto">
+                      {p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}
+                    </span>
+                  )}
+                  <h3>{p.title}</h3>
+                  {p.description && <p>{p.description}</p>}
+                  {p.price !== undefined && (
+                    <p className="preco-produto">
+                      R$ {p.price.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+                <div className="acoes-produto">
+                  <button className="btn btn--primary">Saiba mais</button>
+                  <Link className="btn btn--outline" to="/app/meus-produtos">Comprar</Link>
+                </div>
               </article>
             ))}
           </div>
