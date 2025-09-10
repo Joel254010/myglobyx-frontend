@@ -462,3 +462,58 @@ body{
     gap: 8px;
   }
 }
+
+/* 🌐 Plano de fundo com o globo (igual ao Home) */
+.page {
+  background-image: url('/globyx-globe-bg.svg');
+  background-repeat: no-repeat;
+  background-position: bottom right;
+  background-size: 600px;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* 🔽 Dropdown de menu do admin */
+.admin-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-dropdown-button {
+  background: transparent;
+  border: none;
+  color: #1a1a1a;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.95rem;
+}
+
+.admin-dropdown-button:hover {
+  color: #007bff;
+}
+
+.admin-dropdown-menu {
+  position: absolute;
+  top: 125%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  padding: 8px 0;
+  border-radius: 6px;
+  z-index: 999;
+  min-width: 160px;
+}
+
+.admin-dropdown-menu a {
+  display: block;
+  padding: 8px 16px;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.admin-dropdown-menu a:hover {
+  background: #f0f0f0;
+}

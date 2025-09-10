@@ -8,6 +8,7 @@ const ADMIN_TOKEN_KEY = "myglobyx_admin_token";
 export default function AdminLayout() {
   const [adminEmail, setAdminEmail] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [menuOpen, setMenuOpen] = React.useState(false);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -15,13 +16,11 @@ export default function AdminLayout() {
 
     (async () => {
       try {
-        // tenta obter permissões/dados do admin
-        const grants = await getAdminGrants(); // usa token do localStorage
+        const grants = await getAdminGrants();
         if (!active) return;
         setAdminEmail(grants?.email ?? null);
       } catch (err: any) {
         if (!active) return;
-        // token inválido/expirado → limpa e volta pro login
         localStorage.removeItem(ADMIN_TOKEN_KEY);
         navigate("/admin/login", { replace: true, state: { from: { pathname: "/admin" } } });
         return;
@@ -41,18 +40,28 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="page">
+    <div className="page" style={{ backgroundImage: 'url(/globyx-globe-bg.svg)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: '60%', backgroundAttachment: 'fixed' }}>
       <header className="header">
         <div className="container header__inner">
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
           <nav className="nav" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <Link className="link" to="/admin/produtos">Produtos</Link>
-            <Link className="link" to="/admin/liberacoes">Liberações</Link>
-            <Link className="link" to="/admin/usuarios">Usuários</Link>
             {adminEmail && (
-              <span className="muted small" title={adminEmail} style={{ opacity: 0.8 }}>
-                {adminEmail}
-              </span>
+              <div className="dropdown">
+                <button
+                  onClick={() => setMenuOpen(prev => !prev)}
+                  className="btn btn--link"
+                  style={{ fontSize: 14, opacity: 0.8 }}
+                >
+                  {adminEmail}
+                </button>
+                {menuOpen && (
+                  <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', background: '#fff', boxShadow: '0 0 10px rgba(0,0,0,0.1)', padding: '8px 12px', borderRadius: 8, zIndex: 1000 }}>
+                    <Link to="/admin/produtos" className="link" onClick={() => setMenuOpen(false)}>Produtos</Link><br />
+                    <Link to="/admin/liberacoes" className="link" onClick={() => setMenuOpen(false)}>Liberações</Link><br />
+                    <Link to="/admin/usuarios" className="link" onClick={() => setMenuOpen(false)}>Usuários</Link>
+                  </div>
+                )}
+              </div>
             )}
             <button className="btn btn--outline" onClick={handleAdminLogout}>Sair (Admin)</button>
           </nav>
