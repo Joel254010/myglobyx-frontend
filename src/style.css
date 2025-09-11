@@ -44,3 +44,76 @@
 }
 
 /* Redução de tipografia em mobile — sem alterar layout, espaçamentos ou imagens */
+
+/* === Ajustes visuais para página de liberações (AdminGrants.tsx) === */
+
+.page-liberacoes {
+  padding: 32px 16px;
+  max-width: 960px;
+  margin-inline: auto;
+}
+.page-liberacoes h1 {
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+.page-liberacoes .card {
+  background: #fff;
+  border: 1px solid var(--mx-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.04);
+  margin-bottom: 32px;
+}
+.page-liberacoes h3 {
+  margin-top: 0;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.page-liberacoes .form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 16px;
+}
+@media (max-width: 640px) {
+  .page-liberacoes .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.page-liberacoes .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.page-liberacoes .actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.page-liberacoes .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.page-liberacoes .list {
+  margin-top: 16px;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.page-liberacoes .list__row {
+  background: var(--mx-bg-muted);
+  border: 1px solid var(--mx-border);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.page-liberacoes .list__row b {
+  color: var(--mx-blue);
+}
