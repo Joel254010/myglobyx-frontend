@@ -137,6 +137,7 @@ export type AdminProduct = {
   thumbnail?: string;       // ✅ imagem de capa
   categoria?: string;       // ✅ categoria adicionada
   subcategoria?: string;    // ✅ subcategoria adicionada
+  landingPageUrl?: string;  // ✅ nova propriedade (para o botão Saiba Mais)
   price?: number;
   active: boolean;
   createdAt: string;

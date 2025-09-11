@@ -38,6 +38,7 @@ export default function AdminProducts() {
   const [form, setForm] = React.useState<Partial<AdminProduct> & {
     categoria?: string;
     subcategoria?: string;
+    landingPageUrl?: string;
   }>({
     title: "",
     description: "",
@@ -47,6 +48,7 @@ export default function AdminProducts() {
     subcategoria: "",
     price: undefined,
     active: true,
+    landingPageUrl: "",
   });
 
   async function refresh() {
@@ -80,6 +82,7 @@ export default function AdminProducts() {
         thumbnail: form.thumbnail,
         categoria: form.categoria,
         subcategoria: form.subcategoria,
+        landingPageUrl: form.landingPageUrl,
         price: form.price ? Number(form.price) : undefined,
         active: !!form.active,
       } as any);
@@ -93,6 +96,7 @@ export default function AdminProducts() {
         subcategoria: "",
         price: undefined,
         active: true,
+        landingPageUrl: "",
       });
       await refresh();
       setMsg("✅ Produto criado com sucesso.");
@@ -182,6 +186,16 @@ export default function AdminProducts() {
                 }}
               />
             )}
+          </div>
+
+          <div className="field field--full">
+            <label>URL da Landing Page (botão "Saiba mais")</label>
+            <input
+              className="input"
+              value={form.landingPageUrl || ""}
+              onChange={(e) => setForm((f) => ({ ...f, landingPageUrl: e.target.value }))}
+              placeholder="https://..."
+            />
           </div>
 
           <div className="field">
@@ -289,6 +303,11 @@ export default function AdminProducts() {
                     </p>
                   )}
                   <p className="muted small">{p.description}</p>
+                  {p.landingPageUrl && (
+                    <p>
+                      🌐 <a href={p.landingPageUrl} target="_blank" rel="noreferrer">Landing Page</a>
+                    </p>
+                  )}
                   <span
                     className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}
                   >

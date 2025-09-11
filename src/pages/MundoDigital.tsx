@@ -11,6 +11,7 @@ type PublicProduct = {
   thumbnail?: string;
   categoria?: string;
   subcategoria?: string;
+  landingPageUrl?: string; // ✅ novo campo para botão "Saiba mais"
   active: boolean;
 };
 
@@ -188,7 +189,20 @@ export default function MundoDigital() {
                   )}
                 </div>
                 <div className="acoes-produto">
-                  <button className="btn btn--primary">Saiba mais</button>
+                  {p.landingPageUrl ? (
+                    <a
+                      className="btn btn--primary"
+                      href={p.landingPageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Saiba mais
+                    </a>
+                  ) : (
+                    <button className="btn btn--primary" disabled>
+                      Saiba mais
+                    </button>
+                  )}
                   <Link className="btn btn--outline" to="/app/meus-produtos">
                     Comprar
                   </Link>
