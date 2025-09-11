@@ -88,7 +88,7 @@ export function apiSignup(
 }
 
 export async function apiLogin(email: string, password: string) {
-  const { data } = await api.post<AuthResponse>("/auth/login", { email, password });
+  const { data } = await api.post<AuthResponse>("/login", { email, password });
   return data;
 }
 
