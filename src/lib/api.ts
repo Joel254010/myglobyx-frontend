@@ -155,21 +155,22 @@ export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
   return data;
 }
 
-/* ----------------- PRODUTOS PÚBLICOS ----------------- */
-// Tipagem real dos produtos vindos da API pública
-export type PublicProduct = {
+/** ✅ NOVO: Listagem pública de produtos */
+export type AdminProduct = {
   id: string;
-  title: string;
+  title: string;          // corrigido para bater com seu Mongo
+  slug: string;
   description?: string;
-  price?: number;
   thumbnail?: string;
   categoria?: string;
   subcategoria?: string;
+  price?: number;
   active: boolean;
 };
 
-export async function listPublicProducts(): Promise<PublicProduct[]> {
-  const { data } = await api.get<{ products: PublicProduct[] }>("/public/products");
+export async function listPublicProducts(): Promise<AdminProduct[]> {
+  // 🚀 Corrigido para bater com backend
+  const { data } = await api.get<{ products: AdminProduct[] }>("/public/products");
   return data.products;
 }
 
