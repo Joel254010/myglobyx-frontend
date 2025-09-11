@@ -20,12 +20,12 @@ export const BASE_URL = String(
     : DEFAULT_PROD
 ).replace(/\/+$/, "");
 
+// ✅ Corrigido para extrair raiz sem /api
 const ORIGIN_BASE = BASE_URL.includes("/api")
-  ? BASE_URL.replace(/\/api$/, "")
+  ? BASE_URL.slice(0, BASE_URL.lastIndexOf("/api"))
   : BASE_URL;
 
 if (!RAW_API_URL) {
-  // eslint-disable-next-line no-console
   console.warn(`[api] VITE_API_URL não definido. Usando fallback: ${BASE_URL}`);
 }
 
@@ -58,6 +58,7 @@ api.interceptors.response.use(
   }
 );
 
+/* ----------------- AUTH ----------------- */
 export type AuthResponse = {
   token: string;
   user: { id?: string; name: string; email: string; admin?: boolean; isVerified?: boolean };
@@ -77,7 +78,6 @@ export async function apiRegister(
   return data;
 }
 
-// alias para compat
 export function apiSignup(
   name: string,
   email: string,
@@ -92,7 +92,6 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
-/** /health na raiz (pode dar CORS; ignoramos) */
 export async function apiPingHealth() {
   try {
     return await axios.get(`${ORIGIN_BASE}/health`, { timeout: 15_000 });
@@ -101,6 +100,7 @@ export async function apiPingHealth() {
   }
 }
 
+/* ----------------- PROFILE ----------------- */
 export type Address = {
   cep?: string;
   street?: string;
@@ -127,11 +127,6 @@ export async function apiGetProfile(token: string) {
   return data.profile;
 }
 
-/**
- * Atualiza perfil de forma tolerante:
- * - Tenta PATCH /profile
- * - Se voltar HTTP_404 ou HTTP_405, cai para PUT /profile/me
- */
 export async function apiUpdateProfile(token: string, payload: Profile) {
   try {
     const { data } = await api.patch<{ profile: Profile }>("/profile", payload, {
@@ -150,15 +145,32 @@ export async function apiUpdateProfile(token: string, payload: Profile) {
   }
 }
 
-/** ===== Admin ===== */
+/* ----------------- ADMIN ----------------- */
 export type AdminPingResponse = { ok: boolean; isAdmin?: boolean; roles?: string[]; email?: string };
 
-/** Backend publicado aceita GET /admin/ping */
 export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
   const { data } = await api.get<AdminPingResponse>("/admin/ping", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
+}
+
+/* ----------------- PRODUTOS PÚBLICOS ----------------- */
+// Tipagem real dos produtos vindos da API pública
+export type PublicProduct = {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnail?: string;
+  categoria?: string;
+  subcategoria?: string;
+  active: boolean;
+};
+
+export async function listPublicProducts(): Promise<PublicProduct[]> {
+  const { data } = await api.get<{ products: PublicProduct[] }>("/public/products");
+  return data.products;
 }
 
 export default api;

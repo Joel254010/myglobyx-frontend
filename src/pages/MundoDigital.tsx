@@ -1,6 +1,18 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { listProducts, AdminProduct } from "../lib/adminApi";
+import { listPublicProducts } from "../lib/api"; // ✅ Função correta para buscar produtos públicos
+
+// 🔹 Tipagem exclusiva para produtos públicos
+type PublicProduct = {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnail?: string;
+  categoria?: string;
+  subcategoria?: string;
+  active: boolean;
+};
 
 const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
@@ -11,15 +23,13 @@ function logoutLocal() {
 
 export default function MundoDigital() {
   const navigate = useNavigate();
-  const [produtos, setProdutos] = React.useState<AdminProduct[]>([]);
+  const [produtos, setProdutos] = React.useState<PublicProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
 
-  // Nome do usuário
   const [userName, setUserName] = React.useState(
     localStorage.getItem("myglobyx_user_name") || "Usuário"
   );
-
   const [menuOpen, setMenuOpen] = React.useState(false);
 
   function handleLogout() {
@@ -27,12 +37,12 @@ export default function MundoDigital() {
     navigate("/", { replace: true });
   }
 
-  // 🔹 Buscar produtos
+  // 🔹 Buscar produtos públicos
   React.useEffect(() => {
     async function fetchProdutos() {
       try {
-        const items = await listProducts();
-        setProdutos(items.filter((p) => p.active));
+        const items = await listPublicProducts();
+        setProdutos(items.filter((p) => p.active)); // ✅ agora tipado corretamente
       } catch (e: any) {
         setMsg(e?.message || "Erro ao carregar produtos");
       } finally {
@@ -75,10 +85,7 @@ export default function MundoDigital() {
         <div className="container header__inner">
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
           <div className="admin-dropdown">
-            <button
-              className="admin-dropdown-button"
-              onClick={() => setMenuOpen((v) => !v)}
-            >
+            <button className="admin-dropdown-button" onClick={() => setMenuOpen((v) => !v)}>
               👋 Olá, {userName}
             </button>
             {menuOpen && (
@@ -86,17 +93,7 @@ export default function MundoDigital() {
                 <Link to="/app/meus-produtos">Meus Produtos</Link>
                 <Link to="/app/meus-dados">Meus Dados</Link>
                 <Link to="/suporte">Suporte</Link>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    padding: "8px 16px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
-                >
+                <button onClick={handleLogout} className="btn btn--ghost">
                   Sair
                 </button>
               </div>
@@ -105,14 +102,12 @@ export default function MundoDigital() {
         </div>
       </header>
 
-      {/* Hero interno */}
+      {/* Hero */}
       <section className="how-hero">
         <div className="container how-hero__content">
           <h1>Conheça o Mundo Digital da MyGlobyX</h1>
           <p>
-            Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e
-            destaques para começar do jeito certo. Seus produtos comprados
-            ficam em <b>Meus Produtos</b>.
+            Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.
           </p>
           <div className="hero__actions">
             <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">
@@ -125,7 +120,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Primeiros passos */}
+      {/* Etapas */}
       <section className="steps">
         <div className="container">
           <h2>Primeiros passos</h2>
@@ -158,7 +153,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Destaques */}
+      {/* Produtos em destaque */}
       <section id="destaques" className="app">
         <div className="container">
           <h2>Destaques</h2>
@@ -204,7 +199,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA final */}
       <section className="cta">
         <div className="container cta__box">
           <h3>Quando você comprar, o acesso é imediato</h3>
@@ -220,7 +215,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Rodapé */}
       <footer className="footer">
         <div className="container footer__inner">
           <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
