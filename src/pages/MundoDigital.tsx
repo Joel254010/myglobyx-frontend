@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { listPublicProducts } from "../lib/api"; // ✅ Função correta para buscar produtos públicos
+import { listPublicProducts } from "../lib/api";
 
 // 🔹 Tipagem exclusiva para produtos públicos
 type PublicProduct = {
@@ -11,7 +11,7 @@ type PublicProduct = {
   thumbnail?: string;
   categoria?: string;
   subcategoria?: string;
-  landingPageUrl?: string; // ✅ novo campo para botão "Saiba mais"
+  landingPageUrl?: string;
   active: boolean;
 };
 
@@ -27,23 +27,22 @@ export default function MundoDigital() {
   const [produtos, setProdutos] = React.useState<PublicProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
-
   const [userName, setUserName] = React.useState(
     localStorage.getItem("myglobyx_user_name") || "Usuário"
   );
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
 
   function handleLogout() {
     logoutLocal();
     navigate("/", { replace: true });
   }
 
-  // 🔹 Buscar produtos públicos
   React.useEffect(() => {
     async function fetchProdutos() {
       try {
         const items = await listPublicProducts();
-        setProdutos(items.filter((p) => p.active)); // ✅ agora tipado corretamente
+        setProdutos(items.filter((p) => p.active));
       } catch (e: any) {
         setMsg(e?.message || "Erro ao carregar produtos");
       } finally {
@@ -53,17 +52,14 @@ export default function MundoDigital() {
     fetchProdutos();
   }, []);
 
-  // 🔹 Buscar perfil do usuário
   React.useEffect(() => {
     async function fetchProfile() {
       try {
         const token = localStorage.getItem("myglobyx_token");
         if (!token) return;
-
         const res = await fetch("/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         if (res.ok) {
           const data = await res.json();
           if (data?.name) {
@@ -75,13 +71,20 @@ export default function MundoDigital() {
         console.error("Erro ao buscar perfil:", e);
       }
     }
-
     fetchProfile();
   }, []);
 
+  function toggleExpand(id: string) {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  }
+
   return (
     <div className="page">
-      {/* Header */}
       <header className="header">
         <div className="container header__inner">
           <Link className="brand__logo" to="/">MYGLOBYX</Link>
@@ -103,13 +106,10 @@ export default function MundoDigital() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="how-hero">
         <div className="container how-hero__content">
           <h1>Conheça o Mundo Digital da MyGlobyX</h1>
-          <p>
-            Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.
-          </p>
+          <p>Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.</p>
           <div className="hero__actions">
             <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">
               Ver Meus Produtos
@@ -121,7 +121,6 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Etapas */}
       <section className="steps">
         <div className="container">
           <h2>Primeiros passos</h2>
@@ -154,7 +153,6 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Produtos em destaque */}
       <section id="destaques" className="app">
         <div className="container">
           <h2>Destaques</h2>
@@ -183,7 +181,19 @@ export default function MundoDigital() {
                     </span>
                   )}
                   <h3>{p.title}</h3>
-                  {p.description && <p>{p.description}</p>}
+                  {p.description && (
+                    <>
+                      <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
+                        {p.description}
+                      </p>
+                      <button
+                        className="ver-mais"
+                        onClick={() => toggleExpand(p.id)}
+                      >
+                        {expandedIds.has(p.id) ? "Ver menos" : "Ver mais"}
+                      </button>
+                    </>
+                  )}
                   {p.price !== undefined && (
                     <p className="preco-produto">R$ {p.price.toFixed(2)}</p>
                   )}
@@ -213,7 +223,6 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* CTA final */}
       <section className="cta">
         <div className="container cta__box">
           <h3>Quando você comprar, o acesso é imediato</h3>
@@ -229,7 +238,6 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      {/* Rodapé */}
       <footer className="footer">
         <div className="container footer__inner">
           <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
