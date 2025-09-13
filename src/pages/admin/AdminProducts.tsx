@@ -1,3 +1,4 @@
+// src/pages/admin/AdminProducts.tsx
 import React from "react";
 import {
   AdminProduct,
@@ -7,7 +8,6 @@ import {
   deleteProduct,
 } from "../../lib/adminApi";
 
-// Categorias e subcategorias pré-definidas
 const categorias: Record<string, string[]> = {
   "Animais e Pets": ["Cães", "Gatos", "Outros Pets"],
   "Autoconhecimento e espiritualidade": ["Meditação", "Autoajuda", "Espiritualidade"],
@@ -34,6 +34,8 @@ export default function AdminProducts() {
   const [items, setItems] = React.useState<AdminProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
+
+  const [expandedMap, setExpandedMap] = React.useState<Record<string, boolean>>({});
 
   const [form, setForm] = React.useState<Partial<AdminProduct> & {
     categoria?: string;
@@ -123,6 +125,10 @@ export default function AdminProducts() {
       setMsg(e?.message || "Erro ao deletar");
     }
   }
+
+  const toggleDescription = (id: string) => {
+    setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <div className="admin-produtos fundo-feed">
@@ -281,55 +287,76 @@ export default function AdminProducts() {
           {items.length === 0 ? (
             <p className="muted">Nenhum produto cadastrado.</p>
           ) : (
-            items.map((p) => (
-              <div key={p.id} className="card card-produto">
-                {p.thumbnail && (
-                  <img
-                    src={p.thumbnail}
-                    alt={p.title}
-                    className="thumb-produto"
-                  />
-                )}
-                <div className="conteudo-produto">
-                  <h4>{p.title}</h4>
-                  {p.categoria && (
+            items.map((p) => {
+              const desc = String(p.description || "");
+              const isExpanded = expandedMap[p.id];
+              const showToggle = desc.length > 120;
+              const shortDesc = desc.slice(0, 120);
+
+              return (
+                <div key={p.id} className="card card-produto">
+                  {p.thumbnail && (
+                    <img
+                      src={p.thumbnail}
+                      alt={p.title}
+                      className="thumb-produto"
+                    />
+                  )}
+                  <div className="conteudo-produto">
+                    <h4>{p.title}</h4>
+                    {p.categoria && (
+                      <p className="muted small">
+                        {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
+                      </p>
+                    )}
+                    {p.price && (
+                      <p>
+                        💰 <b>R$ {p.price.toFixed(2)}</b>
+                      </p>
+                    )}
                     <p className="muted small">
-                      {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
+                      {isExpanded ? desc : shortDesc}
+                      {showToggle && (
+                        <>
+                          {!isExpanded && "... "}
+                          <button
+                            className="btn btn--link btn--sm"
+                            onClick={() => toggleDescription(p.id)}
+                          >
+                            {isExpanded ? "Ver menos" : "Ver mais"}
+                          </button>
+                        </>
+                      )}
                     </p>
-                  )}
-                  {p.price && (
-                    <p>
-                      💰 <b>R$ {p.price.toFixed(2)}</b>
-                    </p>
-                  )}
-                  <p className="muted small">{p.description}</p>
-                  {p.landingPageUrl && (
-                    <p>
-                      🌐 <a href={p.landingPageUrl} target="_blank" rel="noreferrer">Landing Page</a>
-                    </p>
-                  )}
-                  <span
-                    className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}
-                  >
-                    {p.active ? "Ativo" : "Inativo"}
-                  </span>
+                    {p.landingPageUrl && (
+                      <p>
+                        🌐{" "}
+                        <a href={p.landingPageUrl} target="_blank" rel="noreferrer">
+                          Landing Page
+                        </a>
+                      </p>
+                    )}
+                    <span className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}>
+                      {p.active ? "Ativo" : "Inativo"}
+                    </span>
+                  </div>
+                  <div className="acoes-produto">
+                    <button
+                      className="btn btn--ghost"
+                      onClick={() => toggleActive(p)}
+                    >
+                      {p.active ? "Desativar" : "Ativar"}
+                    </button>
+                    <button
+                      className="btn btn--outline"
+                      onClick={() => remove(p.id)}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
-                <div className="acoes-produto">
-                  <button
-                    className="btn btn--ghost"
-                    onClick={() => toggleActive(p)}
-                  >
-                    {p.active ? "Desativar" : "Ativar"}
-                  </button>
-                  <button
-                    className="btn btn--outline"
-                    onClick={() => remove(p.id)}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
