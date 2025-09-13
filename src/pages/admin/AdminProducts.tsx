@@ -34,14 +34,10 @@ export default function AdminProducts() {
   const [items, setItems] = React.useState<AdminProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
-
+  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [expandedMap, setExpandedMap] = React.useState<Record<string, boolean>>({});
 
-  const [form, setForm] = React.useState<Partial<AdminProduct> & {
-    categoria?: string;
-    subcategoria?: string;
-    landingPageUrl?: string;
-  }>({
+  const [form, setForm] = React.useState<Partial<AdminProduct>>({
     title: "",
     description: "",
     mediaUrl: "",
@@ -69,25 +65,28 @@ export default function AdminProducts() {
     refresh();
   }, []);
 
-  async function onCreate(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     if (!form.title?.trim()) {
       setMsg("Informe o título");
       return;
     }
+
     try {
-      await createProduct({
-        title: form.title,
-        description: form.description,
-        mediaUrl: form.mediaUrl,
-        thumbnail: form.thumbnail,
-        categoria: form.categoria,
-        subcategoria: form.subcategoria,
-        landingPageUrl: form.landingPageUrl,
-        price: form.price ? Number(form.price) : undefined,
-        active: !!form.active,
-      } as any);
+      if (editingId) {
+        await updateProduct(editingId, {
+          ...form,
+          price: form.price ? Number(form.price) : undefined,
+        } as any);
+        setMsg("✅ Produto atualizado com sucesso.");
+      } else {
+        await createProduct({
+          ...form,
+          price: form.price ? Number(form.price) : undefined,
+        } as any);
+        setMsg("✅ Produto criado com sucesso.");
+      }
 
       setForm({
         title: "",
@@ -100,19 +99,10 @@ export default function AdminProducts() {
         active: true,
         landingPageUrl: "",
       });
-      await refresh();
-      setMsg("✅ Produto criado com sucesso.");
-    } catch (e: any) {
-      setMsg(e?.message || "Erro ao criar produto");
-    }
-  }
-
-  async function toggleActive(p: AdminProduct) {
-    try {
-      await updateProduct(p.id, { active: !p.active });
+      setEditingId(null);
       await refresh();
     } catch (e: any) {
-      setMsg(e?.message || "Erro ao atualizar");
+      setMsg(e?.message || "Erro ao salvar produto");
     }
   }
 
@@ -134,140 +124,70 @@ export default function AdminProducts() {
     <div className="admin-produtos fundo-feed">
       <h1 className="titulo-admin">Gerenciar Produtos</h1>
 
-      {msg && (
-        <div className="alert alert--ok" style={{ marginBottom: 12 }}>
-          {msg}
-        </div>
-      )}
+      {msg && <div className="alert alert--ok" style={{ marginBottom: 12 }}>{msg}</div>}
 
       {/* Formulário */}
-      <form onSubmit={onCreate} className="card" style={{ padding: 20, marginBottom: 20 }}>
-        <h3 style={{ marginBottom: 12 }}>Novo produto</h3>
+      <form onSubmit={onSubmit} className="card" style={{ padding: 20, marginBottom: 20 }}>
+        <h3 style={{ marginBottom: 12 }}>
+          {editingId ? "Editar produto" : "Novo produto"}
+        </h3>
+
         <div className="form-grid">
+          {/* Os campos do formulário permanecem iguais */}
           <div className="field field--full">
             <label>Título</label>
-            <input
-              className="input"
-              value={form.title || ""}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            />
+            <input className="input" value={form.title || ""} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
           </div>
 
           <div className="field field--full">
             <label>Descrição</label>
-            <textarea
-              className="input"
-              rows={3}
-              value={form.description || ""}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
+            <textarea className="input" rows={3} value={form.description || ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
 
           <div className="field field--full">
-            <label>URL do conteúdo (vídeo/pdf/link)</label>
-            <input
-              className="input"
-              value={form.mediaUrl || ""}
-              onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))}
-            />
+            <label>URL do conteúdo</label>
+            <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))} />
           </div>
 
           <div className="field field--full">
-            <label>URL da Thumbnail (imagem de capa)</label>
-            <input
-              className="input"
-              value={form.thumbnail || ""}
-              onChange={(e) => setForm((f) => ({ ...f, thumbnail: e.target.value }))}
-              placeholder="https://..."
-            />
-            {form.thumbnail && (
-              <img
-                src={form.thumbnail}
-                alt="Prévia da thumbnail"
-                style={{
-                  marginTop: 8,
-                  maxWidth: 200,
-                  borderRadius: 8,
-                  boxShadow: "0 0 4px rgba(0,0,0,0.3)",
-                }}
-              />
-            )}
+            <label>Thumbnail</label>
+            <input className="input" value={form.thumbnail || ""} onChange={(e) => setForm((f) => ({ ...f, thumbnail: e.target.value }))} />
+            {form.thumbnail && <img src={form.thumbnail} alt="Prévia" style={{ maxWidth: 200, marginTop: 8 }} />}
           </div>
 
           <div className="field field--full">
-            <label>URL da Landing Page (botão "Saiba mais")</label>
-            <input
-              className="input"
-              value={form.landingPageUrl || ""}
-              onChange={(e) => setForm((f) => ({ ...f, landingPageUrl: e.target.value }))}
-              placeholder="https://..."
-            />
+            <label>Landing Page</label>
+            <input className="input" value={form.landingPageUrl || ""} onChange={(e) => setForm((f) => ({ ...f, landingPageUrl: e.target.value }))} />
           </div>
 
           <div className="field">
             <label>Categoria</label>
-            <select
-              className="input"
-              value={form.categoria || ""}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  categoria: e.target.value,
-                  subcategoria: "",
-                }))
-              }
-            >
+            <select className="input" value={form.categoria || ""} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value, subcategoria: "" }))}>
               <option value="">Selecione</option>
               {Object.keys(categorias).map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
           </div>
 
           <div className="field">
             <label>Subcategoria</label>
-            <select
-              className="input"
-              value={form.subcategoria || ""}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, subcategoria: e.target.value }))
-              }
-              disabled={!form.categoria}
-            >
+            <select className="input" value={form.subcategoria || ""} onChange={(e) => setForm((f) => ({ ...f, subcategoria: e.target.value }))} disabled={!form.categoria}>
               <option value="">Selecione</option>
-              {form.categoria &&
-                categorias[form.categoria]?.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
+              {form.categoria && categorias[form.categoria]?.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
             </select>
           </div>
 
           <div className="field">
-            <label>Preço (opcional)</label>
-            <input
-              className="input"
-              type="number"
-              step="0.01"
-              value={form.price as any || ""}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, price: e.target.value as any }))
-              }
-            />
+            <label>Preço</label>
+            <input className="input" type="number" step="0.01" value={form.price as any || ""} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value as any }))} />
           </div>
 
           <div className="field">
             <label>Status</label>
-            <select
-              className="input"
-              value={form.active ? "1" : "0"}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, active: e.target.value === "1" }))
-              }
-            >
+            <select className="input" value={form.active ? "1" : "0"} onChange={(e) => setForm((f) => ({ ...f, active: e.target.value === "1" }))}>
               <option value="1">Ativo</option>
               <option value="0">Inativo</option>
             </select>
@@ -275,7 +195,9 @@ export default function AdminProducts() {
         </div>
 
         <div className="actions" style={{ marginTop: 16 }}>
-          <button className="btn btn--primary">Criar</button>
+          <button className="btn btn--primary">
+            {editingId ? "Salvar Alterações" : "Criar"}
+          </button>
         </div>
       </form>
 
@@ -288,53 +210,27 @@ export default function AdminProducts() {
             <p className="muted">Nenhum produto cadastrado.</p>
           ) : (
             items.map((p) => {
-              const desc = String(p.description || "");
               const isExpanded = expandedMap[p.id];
+              const desc = String(p.description || "");
               const showToggle = desc.length > 120;
               const shortDesc = desc.slice(0, 120);
-
               return (
                 <div key={p.id} className="card card-produto">
-                  {p.thumbnail && (
-                    <img
-                      src={p.thumbnail}
-                      alt={p.title}
-                      className="thumb-produto"
-                    />
-                  )}
+                  {p.thumbnail && <img src={p.thumbnail} className="thumb-produto" alt={p.title} />}
                   <div className="conteudo-produto">
                     <h4>{p.title}</h4>
-                    {p.categoria && (
-                      <p className="muted small">
-                        {p.categoria} {p.subcategoria ? `> ${p.subcategoria}` : ""}
-                      </p>
-                    )}
-                    {p.price && (
-                      <p>
-                        💰 <b>R$ {p.price.toFixed(2)}</b>
-                      </p>
-                    )}
+                    <p className="muted small">{p.categoria} {p.subcategoria && `> ${p.subcategoria}`}</p>
+                    {p.price && <p>💰 <b>R$ {p.price.toFixed(2)}</b></p>}
                     <p className="muted small">
                       {isExpanded ? desc : shortDesc}
                       {showToggle && (
-                        <>
-                          {!isExpanded && "... "}
-                          <button
-                            className="btn btn--link btn--sm"
-                            onClick={() => toggleDescription(p.id)}
-                          >
-                            {isExpanded ? "Ver menos" : "Ver mais"}
-                          </button>
-                        </>
+                        <button className="btn btn--link btn--sm" onClick={() => toggleDescription(p.id)}>
+                          {isExpanded ? "Ver menos" : "Ver mais"}
+                        </button>
                       )}
                     </p>
                     {p.landingPageUrl && (
-                      <p>
-                        🌐{" "}
-                        <a href={p.landingPageUrl} target="_blank" rel="noreferrer">
-                          Landing Page
-                        </a>
-                      </p>
+                      <p>🌐 <a href={p.landingPageUrl} target="_blank" rel="noreferrer">Landing Page</a></p>
                     )}
                     <span className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}>
                       {p.active ? "Ativo" : "Inativo"}
@@ -343,14 +239,15 @@ export default function AdminProducts() {
                   <div className="acoes-produto">
                     <button
                       className="btn btn--ghost"
-                      onClick={() => toggleActive(p)}
+                      onClick={() => {
+                        setForm({ ...p });
+                        setEditingId(p.id);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
                     >
-                      {p.active ? "Desativar" : "Ativar"}
+                      Editar
                     </button>
-                    <button
-                      className="btn btn--outline"
-                      onClick={() => remove(p.id)}
-                    >
+                    <button className="btn btn--outline" onClick={() => remove(p.id)}>
                       Excluir
                     </button>
                   </div>
