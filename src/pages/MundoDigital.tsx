@@ -184,8 +184,10 @@ export default function MundoDigital() {
                   {p.description && (
                     <>
                       <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
-                        {p.description}
-                      </p>
+  {expandedIds.has(p.id)
+    ? p.description
+    : p.description.split(" ").slice(0, 20).join(" ") + (p.description.split(" ").length > 20 ? "..." : "")}
+</p>
                       <button
                         className="ver-mais"
                         onClick={() => toggleExpand(p.id)}
