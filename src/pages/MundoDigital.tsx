@@ -22,6 +22,30 @@ function logoutLocal() {
   localStorage.removeItem("myglobyx_user_name");
 }
 
+// ✅ NOVO: função para validar e corrigir URL de destino
+function resolveLandingUrl(p: any): string | null {
+  const raw =
+    p?.landingPageUrl ??
+    p?.landingPage ??
+    p?.landing ??
+    p?.link ??
+    p?.url ??
+    "";
+
+  if (!raw || typeof raw !== "string") return null;
+
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    return new URL(withProto).href;
+  } catch {
+    return null;
+  }
+}
+
 export default function MundoDigital() {
   const navigate = useNavigate();
   const [produtos, setProdutos] = React.useState<PublicProduct[]>([]);
@@ -159,51 +183,56 @@ export default function MundoDigital() {
           )}
 
           <div className="grid-produtos">
-            {produtos.map((p) => (
-              <article key={p.id} className="card-produto">
-                {p.thumbnail && (
-                  <img src={p.thumbnail} alt={p.title} className="thumb-produto" />
-                )}
-                <div className="conteudo-produto">
-                  {p.categoria && (
-                    <span className="tag-produto">
-                      {p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}
-                    </span>
+            {produtos.map((p) => {
+              const url = resolveLandingUrl(p);
+              return (
+                <article key={p.id} className="card-produto">
+                  {p.thumbnail && (
+                    <img src={p.thumbnail} alt={p.title} className="thumb-produto" />
                   )}
-                  <h3>{p.title}</h3>
-                  {p.description && (
-                    <>
-                      <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
-                        {expandedIds.has(p.id)
-                          ? p.description
-                          : p.description.split(" ").slice(0, 20).join(" ") + (p.description.split(" ").length > 20 ? "..." : "")}
-                      </p>
-                      <button className="ver-mais" onClick={() => toggleExpand(p.id)}>
-                        {expandedIds.has(p.id) ? "Ver menos" : "Ver mais"}
+                  <div className="conteudo-produto">
+                    {p.categoria && (
+                      <span className="tag-produto">
+                        {p.categoria}{p.subcategoria ? ` · ${p.subcategoria}` : ""}
+                      </span>
+                    )}
+                    <h3>{p.title}</h3>
+                    {p.description && (
+                      <>
+                        <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
+                          {expandedIds.has(p.id)
+                            ? p.description
+                            : p.description.split(" ").slice(0, 20).join(" ") + (p.description.split(" ").length > 20 ? "..." : "")}
+                        </p>
+                        <button className="ver-mais" onClick={() => toggleExpand(p.id)}>
+                          {expandedIds.has(p.id) ? "Ver menos" : "Ver mais"}
+                        </button>
+                      </>
+                    )}
+                    {p.price !== undefined && (
+                      <p className="preco-produto">R$ {p.price.toFixed(2)}</p>
+                    )}
+                  </div>
+                  <div className="acoes-produto">
+                    {url ? (
+                      <a
+                        className="btn btn--primary"
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Saiba mais
+                      </a>
+                    ) : (
+                      <button className="btn btn--primary" disabled title="Sem link disponível">
+                        Saiba mais
                       </button>
-                    </>
-                  )}
-                  {p.price !== undefined && (
-                    <p className="preco-produto">R$ {p.price.toFixed(2)}</p>
-                  )}
-                </div>
-                <div className="acoes-produto">
-                  {p.landingPageUrl ? (
-                    <a
-                      className="btn btn--primary"
-                      href={p.landingPageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Saiba mais
-                    </a>
-                  ) : (
-                    <button className="btn btn--primary" disabled>Saiba mais</button>
-                  )}
-                  <Link className="btn btn--outline" to="/app/meus-produtos">Comprar</Link>
-                </div>
-              </article>
-            ))}
+                    )}
+                    <Link className="btn btn--outline" to="/app/meus-produtos">Comprar</Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
