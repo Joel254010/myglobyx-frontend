@@ -97,9 +97,7 @@ export default function MundoDigital() {
                 <Link to="/app/meus-produtos">Meus Produtos</Link>
                 <Link to="/app/meus-dados">Meus Dados</Link>
                 <Link to="/suporte">Suporte</Link>
-                <button onClick={handleLogout} className="btn btn--ghost">
-                  Sair
-                </button>
+                <button onClick={handleLogout} className="btn btn--ghost">Sair</button>
               </div>
             )}
           </div>
@@ -111,12 +109,8 @@ export default function MundoDigital() {
           <h1>Conheça o Mundo Digital da MyGlobyX</h1>
           <p>Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.</p>
           <div className="hero__actions">
-            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">
-              Ver Meus Produtos
-            </Link>
-            <Link className="btn btn--outline btn--lg" to="/como-funciona">
-              Como funciona
-            </Link>
+            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">Ver Meus Produtos</Link>
+            <Link className="btn btn--outline btn--lg" to="/como-funciona">Como funciona</Link>
           </div>
         </div>
       </section>
@@ -168,11 +162,7 @@ export default function MundoDigital() {
             {produtos.map((p) => (
               <article key={p.id} className="card-produto">
                 {p.thumbnail && (
-                  <img
-                    src={p.thumbnail}
-                    alt={p.title}
-                    className="thumb-produto"
-                  />
+                  <img src={p.thumbnail} alt={p.title} className="thumb-produto" />
                 )}
                 <div className="conteudo-produto">
                   {p.categoria && (
@@ -184,14 +174,11 @@ export default function MundoDigital() {
                   {p.description && (
                     <>
                       <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
-  {expandedIds.has(p.id)
-    ? p.description
-    : p.description.split(" ").slice(0, 20).join(" ") + (p.description.split(" ").length > 20 ? "..." : "")}
-</p>
-                      <button
-                        className="ver-mais"
-                        onClick={() => toggleExpand(p.id)}
-                      >
+                        {expandedIds.has(p.id)
+                          ? p.description
+                          : p.description.split(" ").slice(0, 20).join(" ") + (p.description.split(" ").length > 20 ? "..." : "")}
+                      </p>
+                      <button className="ver-mais" onClick={() => toggleExpand(p.id)}>
                         {expandedIds.has(p.id) ? "Ver menos" : "Ver mais"}
                       </button>
                     </>
@@ -211,13 +198,9 @@ export default function MundoDigital() {
                       Saiba mais
                     </a>
                   ) : (
-                    <button className="btn btn--primary" disabled>
-                      Saiba mais
-                    </button>
+                    <button className="btn btn--primary" disabled>Saiba mais</button>
                   )}
-                  <Link className="btn btn--outline" to="/app/meus-produtos">
-                    Comprar
-                  </Link>
+                  <Link className="btn btn--outline" to="/app/meus-produtos">Comprar</Link>
                 </div>
               </article>
             ))}
@@ -230,12 +213,8 @@ export default function MundoDigital() {
           <h3>Quando você comprar, o acesso é imediato</h3>
           <p>Pagamentos via Appmax. Seus produtos aparecem automaticamente em "Meus Produtos".</p>
           <div className="hero__actions">
-            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">
-              Ir para Meus Produtos
-            </Link>
-            <Link className="btn btn--outline btn--lg" to="/suporte">
-              Suporte
-            </Link>
+            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">Ir para Meus Produtos</Link>
+            <Link className="btn btn--outline btn--lg" to="/suporte">Suporte</Link>
           </div>
         </div>
       </section>
