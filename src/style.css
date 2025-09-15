@@ -117,3 +117,14 @@
 .page-liberacoes .list__row b {
   color: var(--mx-blue);
 }
+
+.acoes-produto .btn {
+  pointer-events: auto;
+  z-index: 10;
+  position: relative;
+}
+
+.card-produto {
+  position: relative;
+  z-index: 1;
+}
