@@ -20,7 +20,7 @@ export function clearAdminToken() {
 }
 
 // ========================
-// ⚙️ Axios configurado com injeção automática de token
+// ⚙️ Axios configurado com token automático
 // ========================
 
 const adminApi = axios.create({
@@ -31,8 +31,7 @@ const adminApi = axios.create({
 
 adminApi.interceptors.request.use((config) => {
   const token =
-    getAdminToken() ||
-    localStorage.getItem("myglobyx_token") || ""; // fallback
+    getAdminToken() || localStorage.getItem("myglobyx_token") || "";
   if (token) {
     config.headers = config.headers || {};
     (config.headers as any).Authorization = `Bearer ${token}`;
@@ -50,8 +49,10 @@ adminApi.interceptors.response.use(
     ) {
       return Promise.reject(new Error("network_error"));
     }
+
     const code = (err.response?.data as any)?.error as string | undefined;
     if (code) return Promise.reject(new Error(code));
+
     const http = err.response?.status ? `HTTP_${err.response.status}` : "unknown_error";
     return Promise.reject(new Error(http));
   }
@@ -134,10 +135,10 @@ export type AdminProduct = {
   slug: string;
   description?: string;
   mediaUrl?: string;
-  thumbnail?: string;       // ✅ imagem de capa
-  categoria?: string;       // ✅ categoria adicionada
-  subcategoria?: string;    // ✅ subcategoria adicionada
-  landingPageUrl?: string;  // ✅ nova propriedade (para o botão Saiba Mais)
+  thumbnail?: string;         // ✅ capa
+  categoria?: string;         // ✅ categoria
+  subcategoria?: string;      // ✅ subcategoria
+  landingPageUrl?: string;    // ✅ página de destino
   price?: number;
   active: boolean;
   createdAt: string;
@@ -170,7 +171,7 @@ export async function deleteProduct(id: string) {
 }
 
 // ========================
-// 🎫 Grants (Acesso a produtos)
+// 🎫 Grants (acesso do usuário a produtos)
 // ========================
 
 export type Grant = {
@@ -199,14 +200,12 @@ export async function grantAccess(email: string, productId: string, expiresAt?: 
 
 export async function revokeAccess(email: string, productId: string) {
   await adminApi.delete(
-    `/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(
-      productId
-    )}`
+    `/admin/grants?email=${encodeURIComponent(email)}&productId=${encodeURIComponent(productId)}`
   );
 }
 
 // ========================
-// 🔍 NOVA FUNÇÃO – Buscar produtos de um usuário
+// 🔍 Buscar produtos de um usuário
 // ========================
 
 export async function getProdutosDoUsuario(email: string): Promise<AdminProduct[]> {
@@ -217,7 +216,7 @@ export async function getProdutosDoUsuario(email: string): Promise<AdminProduct[
 }
 
 // ========================
-// Exporta o client Axios também
+// Exporta o client Axios
 // ========================
 
 export default adminApi;

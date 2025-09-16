@@ -1,6 +1,7 @@
 // src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
+/* ========== BASE URL DINÂMICA ========= */
 const RAW_API_URL = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
 
 const isBrowser = typeof window !== "undefined";
@@ -41,6 +42,7 @@ export function setAuthToken(token?: string | null) {
   else delete api.defaults.headers.common["Authorization"];
 }
 
+/* ========== INTERCEPTOR DE ERROS ========= */
 api.interceptors.response.use(
   (r) => r,
   (err: AxiosError<any>) => {
@@ -58,7 +60,7 @@ api.interceptors.response.use(
   }
 );
 
-/* ----------------- AUTH ----------------- */
+/* ========== AUTH ========= */
 export type AuthResponse = {
   token: string;
   user: { id?: string; name: string; email: string; admin?: boolean; isVerified?: boolean };
@@ -100,7 +102,7 @@ export async function apiPingHealth() {
   }
 }
 
-/* ----------------- PROFILE ----------------- */
+/* ========== PROFILE ========= */
 export type Address = {
   cep?: string;
   street?: string;
@@ -145,8 +147,13 @@ export async function apiUpdateProfile(token: string, payload: Profile) {
   }
 }
 
-/* ----------------- ADMIN ----------------- */
-export type AdminPingResponse = { ok: boolean; isAdmin?: boolean; roles?: string[]; email?: string };
+/* ========== ADMIN ========= */
+export type AdminPingResponse = {
+  ok: boolean;
+  isAdmin?: boolean;
+  roles?: string[];
+  email?: string;
+};
 
 export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
   const { data } = await api.get<AdminPingResponse>("/admin/ping", {
@@ -155,10 +162,10 @@ export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
   return data;
 }
 
-/** ✅ NOVO: Listagem pública de produtos */
+/* ========== PRODUTOS PÚBLICOS ========= */
 export type AdminProduct = {
   id: string;
-  title: string;          // corrigido para bater com seu Mongo
+  title: string;
   slug: string;
   description?: string;
   thumbnail?: string;
@@ -169,9 +176,25 @@ export type AdminProduct = {
 };
 
 export async function listPublicProducts(): Promise<AdminProduct[]> {
-  // 🚀 Corrigido para bater com backend
   const { data } = await api.get<{ products: AdminProduct[] }>("/public/products");
   return data.products;
+}
+
+/* ✅ NOVO: Obter produto por slug (landing) */
+export async function getProductBySlug(slug: string): Promise<AdminProduct | null> {
+  try {
+    const { data } = await api.get<{ product: AdminProduct }>(`/public/products/${slug}`);
+    return data.product;
+  } catch (err: any) {
+    if (err?.message?.includes("404")) return null;
+    throw err;
+  }
+}
+
+/* ✅ NOVO: Liberar acesso para usuário */
+export async function grantAccessToUser(email: string, productId: string) {
+  const { data } = await api.post("/admin/grants", { email, productId });
+  return data;
 }
 
 export default api;

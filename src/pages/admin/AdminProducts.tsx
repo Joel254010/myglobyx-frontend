@@ -1,4 +1,3 @@
-// src/pages/admin/AdminProducts.tsx
 import React from "react";
 import {
   AdminProduct,
@@ -126,14 +125,12 @@ export default function AdminProducts() {
 
       {msg && <div className="alert alert--ok" style={{ marginBottom: 12 }}>{msg}</div>}
 
-      {/* Formulário */}
       <form onSubmit={onSubmit} className="card" style={{ padding: 20, marginBottom: 20 }}>
         <h3 style={{ marginBottom: 12 }}>
           {editingId ? "Editar produto" : "Novo produto"}
         </h3>
 
         <div className="form-grid">
-          {/* Os campos do formulário permanecem iguais */}
           <div className="field field--full">
             <label>Título</label>
             <input className="input" value={form.title || ""} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
@@ -201,7 +198,6 @@ export default function AdminProducts() {
         </div>
       </form>
 
-      {/* Lista */}
       {loading ? (
         <div>Carregando…</div>
       ) : (
