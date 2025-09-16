@@ -1,3 +1,4 @@
+// src/pages/admin/AdminProducts.tsx
 import React from "react";
 import {
   AdminProduct,
@@ -29,6 +30,12 @@ const categorias: Record<string, string[]> = {
   "Sem categoria": ["Outros"],
 };
 
+const tiposProduto = [
+  { value: "ebook", label: "E-book" },
+  { value: "curso", label: "Curso (YouTube)" },
+  { value: "serviço", label: "Serviço" },
+];
+
 export default function AdminProducts() {
   const [items, setItems] = React.useState<AdminProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -43,6 +50,7 @@ export default function AdminProducts() {
     thumbnail: "",
     categoria: "",
     subcategoria: "",
+    tipo: "ebook",
     price: undefined,
     active: true,
     landingPageUrl: "",
@@ -73,17 +81,16 @@ export default function AdminProducts() {
     }
 
     try {
+      const payload = {
+        ...form,
+        price: form.price ? Number(form.price) : undefined,
+      } as AdminProduct;
+
       if (editingId) {
-        await updateProduct(editingId, {
-          ...form,
-          price: form.price ? Number(form.price) : undefined,
-        } as any);
+        await updateProduct(editingId, payload);
         setMsg("✅ Produto atualizado com sucesso.");
       } else {
-        await createProduct({
-          ...form,
-          price: form.price ? Number(form.price) : undefined,
-        } as any);
+        await createProduct(payload);
         setMsg("✅ Produto criado com sucesso.");
       }
 
@@ -94,6 +101,7 @@ export default function AdminProducts() {
         thumbnail: "",
         categoria: "",
         subcategoria: "",
+        tipo: "ebook",
         price: undefined,
         active: true,
         landingPageUrl: "",
@@ -178,6 +186,16 @@ export default function AdminProducts() {
           </div>
 
           <div className="field">
+            <label>Tipo de Produto</label>
+            <select className="input" value={form.tipo || ""} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as "ebook" | "curso" | "serviço" }))}>
+              <option value="">Selecione</option>
+              {tiposProduto.map((tp) => (
+                <option key={tp.value} value={tp.value}>{tp.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
             <label>Preço</label>
             <input className="input" type="number" step="0.01" value={form.price as any || ""} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value as any }))} />
           </div>
@@ -215,7 +233,10 @@ export default function AdminProducts() {
                   {p.thumbnail && <img src={p.thumbnail} className="thumb-produto" alt={p.title} />}
                   <div className="conteudo-produto">
                     <h4>{p.title}</h4>
-                    <p className="muted small">{p.categoria} {p.subcategoria && `> ${p.subcategoria}`}</p>
+                    <p className="muted small">
+                      {p.tipo ? `📦 ${p.tipo.toUpperCase()} — ` : ""}
+                      {p.categoria} {p.subcategoria && `> ${p.subcategoria}`}
+                    </p>
                     {p.price && <p>💰 <b>R$ {p.price.toFixed(2)}</b></p>}
                     <p className="muted small">
                       {isExpanded ? desc : shortDesc}

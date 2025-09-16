@@ -140,6 +140,7 @@ export type AdminProduct = {
   subcategoria?: string;      // ✅ subcategoria
   landingPageUrl?: string;    // ✅ página de destino
   price?: number;
+  tipo?: "ebook" | "curso" | "serviço"; // ✅ novo campo
   active: boolean;
   createdAt: string;
   updatedAt?: string;
