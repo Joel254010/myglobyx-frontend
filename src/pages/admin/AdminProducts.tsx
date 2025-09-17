@@ -44,7 +44,7 @@ export default function AdminProducts() {
   const [expandedMap, setExpandedMap] = React.useState<Record<string, boolean>>({});
   const [aulas, setAulas] = React.useState<{ titulo: string; capa: string; link: string }[]>([]);
 
-  const [form, setForm] = React.useState<Partial<AdminProduct>>({
+  const [form, setForm] = React.useState<Partial<AdminProduct & { instrucoes?: string }>>({
     title: "",
     description: "",
     mediaUrl: "",
@@ -55,6 +55,7 @@ export default function AdminProducts() {
     price: undefined,
     active: true,
     landingPageUrl: "",
+    instrucoes: "",
   });
 
   async function refresh() {
@@ -93,7 +94,7 @@ export default function AdminProducts() {
       ...form,
       price: form.price ? Number(form.price) : undefined,
       aulas,
-    } as AdminProduct & { aulas?: typeof aulas };
+    } as AdminProduct & { aulas?: typeof aulas; instrucoes?: string };
 
     try {
       if (editingId) {
@@ -115,6 +116,7 @@ export default function AdminProducts() {
         price: undefined,
         active: true,
         landingPageUrl: "",
+        instrucoes: "",
       });
       setAulas([]);
       setEditingId(null);
@@ -212,6 +214,13 @@ export default function AdminProducts() {
                 </div>
               ))}
               <button type="button" className="btn btn--ghost" onClick={addAula}>+ Adicionar Aula</button>
+            </div>
+          )}
+
+          {form.tipo === "serviço" && (
+            <div className="field field--full">
+              <label>Instruções sobre o serviço</label>
+              <textarea className="input" rows={3} value={form.instrucoes || ""} onChange={(e) => setForm((f) => ({ ...f, instrucoes: e.target.value }))} />
             </div>
           )}
 
@@ -318,7 +327,7 @@ export default function AdminProducts() {
                     <button
                       className="btn btn--ghost"
                       onClick={() => {
-                        setForm({ ...p });
+                        setForm({ ...p, instrucoes: (p as any).instrucoes });
                         setAulas((p as any).aulas || []);
                         setEditingId(p.id);
                         window.scrollTo({ top: 0, behavior: "smooth" });
