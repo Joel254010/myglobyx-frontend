@@ -80,12 +80,16 @@ export default function Home() {
       <header className="header">
         <div className="container header__inner">
           <div className="brand">
-            <span className="brand__logo" aria-label="MyGlobyX">
-              MYGLOBYX
-            </span>
+            <Link to="/" aria-label="MyGlobyX">
+              <img
+                src="/logo.png"
+                alt="MyGlobyX"
+                style={{ height: "36px", width: "auto" }}
+              />
+            </Link>
           </div>
           <nav className="nav">
-            <Link className="link" to="/como-funciona">
+            <Link className="btn btn--ghost" to="/como-funciona">
               Como funciona
             </Link>
             <Link className="btn btn--ghost" to="/login">
