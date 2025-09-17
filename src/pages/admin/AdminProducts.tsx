@@ -79,6 +79,10 @@ export default function AdminProducts() {
       setMsg("Informe o título");
       return;
     }
+    if (form.tipo === "ebook" && !form.mediaUrl?.trim()) {
+      setMsg("Informe a URL do conteúdo para E-book");
+      return;
+    }
 
     try {
       const payload = {
@@ -149,10 +153,12 @@ export default function AdminProducts() {
             <textarea className="input" rows={3} value={form.description || ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
 
-          <div className="field field--full">
-            <label>URL do conteúdo</label>
-            <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))} />
-          </div>
+          {form.tipo === "ebook" && (
+            <div className="field field--full">
+              <label>URL do conteúdo</label>
+              <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))} />
+            </div>
+          )}
 
           <div className="field field--full">
             <label>Thumbnail</label>
