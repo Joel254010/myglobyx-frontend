@@ -42,6 +42,7 @@ export default function AdminProducts() {
   const [msg, setMsg] = React.useState<string | null>(null);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [expandedMap, setExpandedMap] = React.useState<Record<string, boolean>>({});
+  const [aulas, setAulas] = React.useState<{ titulo: string; capa: string; link: string }[]>([]);
 
   const [form, setForm] = React.useState<Partial<AdminProduct>>({
     title: "",
@@ -83,13 +84,18 @@ export default function AdminProducts() {
       setMsg("Informe a URL do conteúdo para E-book");
       return;
     }
+    if (form.tipo === "curso" && aulas.length === 0) {
+      setMsg("Adicione ao menos uma aula para o curso");
+      return;
+    }
+
+    const payload = {
+      ...form,
+      price: form.price ? Number(form.price) : undefined,
+      aulas,
+    } as AdminProduct & { aulas?: typeof aulas };
 
     try {
-      const payload = {
-        ...form,
-        price: form.price ? Number(form.price) : undefined,
-      } as AdminProduct;
-
       if (editingId) {
         await updateProduct(editingId, payload);
         setMsg("✅ Produto atualizado com sucesso.");
@@ -110,11 +116,27 @@ export default function AdminProducts() {
         active: true,
         landingPageUrl: "",
       });
+      setAulas([]);
       setEditingId(null);
       await refresh();
     } catch (e: any) {
       setMsg(e?.message || "Erro ao salvar produto");
     }
+  }
+
+  function addAula() {
+    setAulas([...aulas, { titulo: "", capa: "", link: "" }]);
+  }
+
+  function updateAula(index: number, campo: string, valor: string) {
+    const novas = [...aulas];
+    novas[index][campo as "titulo" | "capa" | "link"] = valor;
+    setAulas(novas);
+  }
+
+  function removeAula(index: number) {
+    const novas = aulas.filter((_, i) => i !== index);
+    setAulas(novas);
   }
 
   async function remove(id: string) {
@@ -157,6 +179,39 @@ export default function AdminProducts() {
             <div className="field field--full">
               <label>URL do conteúdo</label>
               <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))} />
+            </div>
+          )}
+
+          {form.tipo === "curso" && (
+            <div className="field field--full">
+              <label>Aulas do Curso</label>
+              {aulas.map((aula, i) => (
+                <div key={i} style={{ marginBottom: 12, padding: 10, border: "1px solid #ccc", borderRadius: 8 }}>
+                  <input
+                    className="input"
+                    placeholder="Título da Aula"
+                    value={aula.titulo}
+                    onChange={(e) => updateAula(i, "titulo", e.target.value)}
+                    style={{ marginBottom: 6 }}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Capa (URL imagem)"
+                    value={aula.capa}
+                    onChange={(e) => updateAula(i, "capa", e.target.value)}
+                    style={{ marginBottom: 6 }}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Link YouTube"
+                    value={aula.link}
+                    onChange={(e) => updateAula(i, "link", e.target.value)}
+                    style={{ marginBottom: 6 }}
+                  />
+                  <button type="button" className="btn btn--outline" onClick={() => removeAula(i)}>Remover</button>
+                </div>
+              ))}
+              <button type="button" className="btn btn--ghost" onClick={addAula}>+ Adicionar Aula</button>
             </div>
           )}
 
@@ -264,6 +319,7 @@ export default function AdminProducts() {
                       className="btn btn--ghost"
                       onClick={() => {
                         setForm({ ...p });
+                        setAulas((p as any).aulas || []);
                         setEditingId(p.id);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
