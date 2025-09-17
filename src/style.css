@@ -242,3 +242,21 @@
   }
 }
 
+/* Logo no header */
+.brand__logo-img {
+  height: 48px;   /* maior no desktop */
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .brand__logo-img {
+    height: 40px;  /* reduzido em tablets */
+  }
+}
+
+@media (max-width: 480px) {
+  .brand__logo-img {
+    height: 32px;  /* menor no smartphone */
+  }
+}

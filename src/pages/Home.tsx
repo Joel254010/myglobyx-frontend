@@ -81,12 +81,12 @@ export default function Home() {
         <div className="container header__inner">
           <div className="brand">
             <Link to="/" aria-label="MyGlobyX">
-              <img
-                src="/logo-mx.png" // ✅ usa a logo oficial adicionada em public/
-                alt="MyGlobyX"
-                style={{ height: "38px", width: "auto", display: "block" }}
-              />
-            </Link>
+  <img
+    src="/logo-mx.png"
+    alt="MyGlobyX"
+    className="brand__logo-img"
+  />
+</Link>
           </div>
           <nav className="nav">
             <Link className="btn btn--ghost" to="/como-funciona">
