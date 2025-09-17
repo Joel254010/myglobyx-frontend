@@ -22,7 +22,6 @@ function logoutLocal() {
   localStorage.removeItem("myglobyx_user_name");
 }
 
-// ✅ NOVO: função para validar e corrigir URL de destino
 function resolveLandingUrl(p: any): string | null {
   const raw =
     p?.landingPageUrl ??
@@ -46,16 +45,39 @@ function resolveLandingUrl(p: any): string | null {
   }
 }
 
+const categorias: Record<string, string[]> = {
+  "Animais e Pets": ["Cães", "Gatos", "Outros Pets"],
+  "Autoconhecimento e espiritualidade": ["Meditação", "Autoajuda", "Espiritualidade"],
+  "Carreira e desenvolvimento pessoal": ["Produtividade", "Carreira", "Habilidades"],
+  "Culinária e gastronomia": ["Receitas", "Doces", "Bebidas"],
+  "Design e fotografia": ["Design Gráfico", "Fotografia", "Edição"],
+  "Educação infantil e família": ["Educação Infantil", "Família", "Parentalidade"],
+  "Engenharia e arquitetura": ["Engenharia Civil", "Arquitetura", "Urbanismo"],
+  "Ensino e estudo acadêmico": ["Matemática", "Ciências", "Humanas"],
+  "Finanças e negócios": ["Investimentos", "Gestão", "Empreendedorismo"],
+  "Hobbies e Lazer": ["Artesanato", "Esportes", "Outros Hobbies"],
+  "Manutenção de equipamentos": ["Informática", "Eletrônicos", "Automotivo"],
+  "Marketing e vendas": ["Marketing Digital", "Vendas", "Publicidade"],
+  "Moda e beleza": ["Beleza", "Moda", "Estilo de Vida"],
+  "Música e artes": ["Instrumentos", "Teoria Musical", "Artes Visuais"],
+  "Plantas e ecologia": ["Jardinagem", "Ecologia", "Sustentabilidade"],
+  "Relacionamentos": ["Casais", "Amizades", "Comunicação"],
+  "Saúde e esporte": ["Saúde", "Fitness", "Nutrição"],
+  "Tecnologia e desenvolvimento de software": ["Programação", "IA", "DevOps"],
+  "Sem categoria": ["Outros"],
+};
+
 export default function MundoDigital() {
   const navigate = useNavigate();
   const [produtos, setProdutos] = React.useState<PublicProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
-  const [userName, setUserName] = React.useState(
-    localStorage.getItem("myglobyx_user_name") || "Usuário"
-  );
+  const [userName, setUserName] = React.useState(localStorage.getItem("myglobyx_user_name") || "Usuário");
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
+
+  const [filtroCategoria, setFiltroCategoria] = React.useState("");
+  const [filtroSubcategoria, setFiltroSubcategoria] = React.useState("");
 
   function handleLogout() {
     logoutLocal();
@@ -106,6 +128,13 @@ export default function MundoDigital() {
       return newSet;
     });
   }
+
+  const produtosFiltrados = produtos.filter((p) => {
+    return (
+      (!filtroCategoria || p.categoria === filtroCategoria) &&
+      (!filtroSubcategoria || p.subcategoria === filtroSubcategoria)
+    );
+  });
 
   return (
     <div className="page">
@@ -175,15 +204,45 @@ export default function MundoDigital() {
         <div className="container">
           <h2>Destaques</h2>
 
+          <div className="filtros" style={{ marginBottom: 24 }}>
+            <h3>Navegue pelos Produtos do Mundo Digital</h3>
+            <p>Filtre por categoria ou subcategoria e encontre o que mais combina com você.</p>
+            <select
+              className="input"
+              value={filtroCategoria}
+              onChange={(e) => {
+                setFiltroCategoria(e.target.value);
+                setFiltroSubcategoria("");
+              }}
+              style={{ marginRight: 12 }}
+            >
+              <option value="">Todas as categorias</option>
+              {Object.keys(categorias).map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <select
+              className="input"
+              value={filtroSubcategoria}
+              onChange={(e) => setFiltroSubcategoria(e.target.value)}
+              disabled={!filtroCategoria}
+            >
+              <option value="">Todas as subcategorias</option>
+              {filtroCategoria && categorias[filtroCategoria]?.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+          </div>
+
           {msg && <div className="alert alert--err">{msg}</div>}
           {loading && <p>Carregando produtos...</p>}
 
-          {!loading && produtos.length === 0 && (
-            <p className="muted">Nenhum produto disponível no momento.</p>
+          {!loading && produtosFiltrados.length === 0 && (
+            <p className="muted">Nenhum produto encontrado para os filtros selecionados.</p>
           )}
 
           <div className="grid-produtos">
-            {produtos.map((p) => {
+            {produtosFiltrados.map((p) => {
               const url = resolveLandingUrl(p);
               return (
                 <article key={p.id} className="card-produto">
