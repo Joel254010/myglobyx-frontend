@@ -64,9 +64,9 @@ export default function Home() {
       <section className="promo-banner">
         <div className="promo__inner">
           <h2>
-            Nasce a MyGlobyX 🚀
+            Somos todos MyGlobyX 🚀
             <Link to="/criar-conta" className="btn btn--promo-inline">
-              Comece Agora
+              Registre-se Já!
             </Link>
           </h2>
           <p className="promo__subtitle">
