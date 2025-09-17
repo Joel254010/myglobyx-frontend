@@ -110,20 +110,19 @@ export default function Home() {
       </header>
 
       {/* 🔥 Banner oficial de lançamento MyGlobyX */}
-      <section className="promo-banner">
-        <div className="promo__inner">
-          <h2>
-            Nasce a <span className="highlight">MyGlobyX</span> 🚀
-          </h2>
-          <p>
-            A plataforma global dos nossos produtos digitais exclusivos. 
-            E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.
-          </p>
-          <Link to="/criar-conta" className="btn btn--promo">
-            Comece Agora
-          </Link>
-        </div>
-      </section>
+<section className="promo-banner">
+  <div className="promo__inner">
+    <h2>
+      Nasce a <span className="highlight">MyGlobyX</span> 🚀
+    </h2>
+    <Link to="/criar-conta" className="btn btn--promo-inline">
+      Comece Agora
+    </Link>
+  </div>
+  <p className="promo__subtitle">
+    A plataforma global dos nossos produtos digitais exclusivos — E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.
+  </p>
+</section>
 
       {/* HERO */}
       <main>
