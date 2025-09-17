@@ -57,13 +57,24 @@ export default function AdminLayout() {
       <header className="header" style={{ padding: "16px 0" }}>
         <div
           className="container header__inner"
-          style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
-          <Link className="brand__logo" to="/" style={{ fontWeight: 700, fontSize: 20 }}>
+          <Link
+            className="brand__logo"
+            to="/"
+            style={{ fontWeight: 700, fontSize: 20 }}
+          >
             MYGLOBYX
           </Link>
 
-          <nav className="nav" style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          <nav
+            className="nav"
+            style={{ display: "flex", gap: 20, alignItems: "center" }}
+          >
             {adminEmail && (
               <>
                 <span
@@ -90,34 +101,44 @@ export default function AdminLayout() {
 
                   {menuOpen && (
                     <div className="admin-submenu">
-                      <Link to="/admin/produtos" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        to="/admin/produtos"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Produtos
                       </Link>
-                      <Link to="/admin/liberacoes" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        to="/admin/liberacoes"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Liberações
                       </Link>
-                      <Link to="/admin/usuarios" onClick={() => setMenuOpen(false)}>
+                      <Link
+                        to="/admin/usuarios"
+                        onClick={() => setMenuOpen(false)}
+                      >
                         Usuários
                       </Link>
+                      <button
+                        onClick={handleAdminLogout}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "8px 16px",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "#d93025",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Sair (Admin)
+                      </button>
                     </div>
                   )}
                 </div>
               </>
             )}
-            <button
-              className="btn"
-              style={{
-                padding: "6px 12px",
-                borderRadius: 6,
-                fontWeight: "bold",
-                color: "#00BFFF",
-                border: "1px solid #00BFFF",
-                background: "transparent",
-              }}
-              onClick={handleAdminLogout}
-            >
-              Sair (Admin)
-            </button>
           </nav>
         </div>
       </header>
