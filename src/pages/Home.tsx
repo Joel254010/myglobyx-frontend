@@ -82,9 +82,9 @@ export default function Home() {
           <div className="brand">
             <Link to="/" aria-label="MyGlobyX">
               <img
-                src="/logo.png"
+                src="/logo-mx.png" // ✅ usa a logo oficial adicionada em public/
                 alt="MyGlobyX"
-                style={{ height: "36px", width: "auto" }}
+                style={{ height: "38px", width: "auto", display: "block" }}
               />
             </Link>
           </div>
