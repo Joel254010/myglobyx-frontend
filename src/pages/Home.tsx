@@ -63,12 +63,12 @@ export default function Home() {
       {/* 🔥 Banner oficial no topo */}
       <section className="promo-banner">
         <div className="promo__inner">
-          <h2>
-            Somos todos MyGlobyX 🚀
+          <div className="promo__headline">
+            <h2>Somos todos MyGlobyX 🚀</h2>
             <Link to="/criar-conta" className="btn btn--promo-inline">
               Registre-se Já!
             </Link>
-          </h2>
+          </div>
           <p className="promo__subtitle">
             A plataforma global dos nossos produtos digitais exclusivos — 
             E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.

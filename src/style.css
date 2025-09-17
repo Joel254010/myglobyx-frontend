@@ -133,8 +133,7 @@
 .promo-banner {
   background: linear-gradient(90deg, #0B3C99, #0847CC); /* azul mais escuro */
   color: #fff;
-  text-align: center;
-  padding: 0.8rem 1rem; /* 🔽 faixa mais fina */
+  padding: 0.6rem 1rem; /* faixa mais fina */
   border-bottom: 3px solid #1ABC9C; /* detalhe turquesa */
   position: relative;
   top: 0;
@@ -145,32 +144,43 @@
 .promo__inner {
   max-width: 1100px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Linha principal: título + botão */
+.promo__headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .promo-banner h2 {
-  font-size: clamp(20px, 2.8vw, 26px); /* menor */
+  font-size: clamp(20px, 2.6vw, 24px);
   font-weight: 800;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  display: inline-block;
-  color: #fff; /* todas as letras brancas */
+  color: #fff;
 }
 
 .promo-banner .highlight {
-  color: #fff; /* também branco */
+  color: #fff;
 }
 
 .promo-banner p {
-  font-size: 0.95rem;
-  margin-top: 6px;
-  margin-bottom: 0;
+  font-size: 0.9rem;
+  margin: 4px 0 0;
   line-height: 1.4;
   font-weight: 500;
   color: #fff;
 }
 
-/* Botão menor inline */
+/* Botão inline */
 .btn--promo-inline {
   background: #1ABC9C; /* Turquesa */
   color: #fff;
@@ -178,39 +188,38 @@
   border-radius: 6px;
   font-weight: 700;
   font-size: 0.8rem;
-  display: inline-block;
-  margin-left: 10px;
   text-decoration: none;
   transition: background 0.3s ease;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .btn--promo-inline:hover {
-  background: #159d82; /* Turquesa mais escuro */
+  background: #159d82;
 }
 
 /* ====== Responsivo ====== */
 @media (max-width: 768px) {
   .promo-banner {
-    padding: 0.6rem 1rem;
+    padding: 0.6rem;
   }
 
   .promo-banner h2 {
-    font-size: clamp(18px, 4vw, 22px);
+    font-size: 18px;
   }
 
   .promo-banner p {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  .promo__headline {
+    flex-direction: row; /* mantém botão e título na mesma linha */
+    flex-wrap: nowrap;
+    gap: 6px;
   }
 
   .btn--promo-inline {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.7rem;
-    margin-left: 0;
-    margin-top: 6px;
-    display: block;
-    max-width: 160px;
-    margin-inline: auto;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
   }
 }
 
@@ -224,11 +233,12 @@
   }
 
   .promo-banner p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .btn--promo-inline {
-    width: 100%;
-    max-width: 180px;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
   }
 }
+
