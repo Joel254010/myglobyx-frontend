@@ -128,3 +128,95 @@
   position: relative;
   z-index: 1;
 }
+
+/* ====== Banner Lançamento MyGlobyX ====== */
+.promo-banner {
+  background: linear-gradient(90deg, var(--mx-blue-dark), var(--mx-blue));
+  color: #fff;
+  text-align: center;
+  padding: 2rem 1rem;
+  border-bottom: 4px solid #FF2E88; /* detalhe rosa da marca */
+}
+
+.promo__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.promo-banner h2 {
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.promo-banner .highlight {
+  color: #FF2E88; /* Rosa oficial MyGlobyX */
+}
+
+.promo-banner p {
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.btn--promo {
+  background: #FF2E88;
+  color: #fff;
+  padding: 0.8rem 1.6rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: inline-block;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.btn--promo:hover {
+  background: #e02675;
+}
+
+/* ====== Responsivo: Banner MyGlobyX ====== */
+@media (max-width: 768px) {
+  .promo-banner {
+    padding: 1.5rem 1rem;
+  }
+
+  .promo-banner h2 {
+    font-size: clamp(22px, 5vw, 28px);
+    line-height: 1.2;
+  }
+
+  .promo-banner p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .btn--promo {
+    font-size: 0.9rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .promo-banner {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .promo-banner h2 {
+    font-size: 20px;
+  }
+
+  .promo-banner p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn--promo {
+    width: 100%;
+    max-width: 240px;
+  }
+}

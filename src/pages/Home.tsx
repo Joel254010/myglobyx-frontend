@@ -30,7 +30,6 @@ const depoimentos: Depo[] = [
     role: "Assinante Conteúdos Premium",
     text:
       "O suporte foi impecável. Valeu cada centavo! Já indiquei para dois amigos.",
-    // ✅ foto feminina
     avatar:
       "https://images.unsplash.com/photo-1597466765990-64ad1c35dafc?q=80&w=256&auto=format&fit=crop",
   },
@@ -109,6 +108,22 @@ export default function Home() {
           </nav>
         </div>
       </header>
+
+      {/* 🔥 Banner oficial de lançamento MyGlobyX */}
+      <section className="promo-banner">
+        <div className="promo__inner">
+          <h2>
+            Nasce a <span className="highlight">MyGlobyX</span> 🚀
+          </h2>
+          <p>
+            A plataforma global dos nossos produtos digitais exclusivos. 
+            E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.
+          </p>
+          <Link to="/criar-conta" className="btn btn--promo">
+            Comece Agora
+          </Link>
+        </div>
+      </section>
 
       {/* HERO */}
       <main>
