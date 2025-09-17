@@ -1,3 +1,4 @@
+// src/pages/Home.tsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -47,7 +48,6 @@ export default function Home() {
 
   const d = depoimentos[idx];
 
-  // Fallback simples para imagens (usa pravatar com seed no nome)
   const handleAvatarError = (
     e: React.SyntheticEvent<HTMLImageElement>,
     name: string,
@@ -60,32 +60,21 @@ export default function Home() {
 
   return (
     <div className="page">
-      {/* BG decor com globo */}
-      <div className="hero__bg" aria-hidden>
-        <svg className="bg-globe" viewBox="0 0 512 512">
-          <defs>
-            <radialGradient id="g" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stopColor="#1066FF12" />
-              <stop offset="100%" stopColor="#1066FF00" />
-            </radialGradient>
-          </defs>
-          <circle cx="256" cy="256" r="256" fill="url(#g)" />
-          <g fill="none" stroke="#0B4ED120" strokeWidth="2">
-            <circle cx="256" cy="256" r="180" />
-            <circle cx="256" cy="256" r="120" />
-            <circle cx="256" cy="256" r="60" />
-            <ellipse cx="256" cy="256" rx="200" ry="90" />
-            <ellipse
-              cx="256"
-              cy="256"
-              rx="200"
-              ry="200"
-              transform="rotate(90 256 256)"
-            />
-            <path d="M56 256h400M256 56v400" />
-          </g>
-        </svg>
-      </div>
+      {/* 🔥 Banner oficial no topo */}
+      <section className="promo-banner">
+        <div className="promo__inner">
+          <h2>
+            Nasce a MyGlobyX 🚀
+            <Link to="/criar-conta" className="btn btn--promo-inline">
+              Comece Agora
+            </Link>
+          </h2>
+          <p className="promo__subtitle">
+            A plataforma global dos nossos produtos digitais exclusivos — 
+            E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.
+          </p>
+        </div>
+      </section>
 
       {/* Header */}
       <header className="header">
@@ -109,26 +98,10 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 🔥 Banner oficial de lançamento MyGlobyX */}
-<section className="promo-banner">
-  <div className="promo__inner">
-    <h2>
-      Nasce a <span className="highlight">MyGlobyX</span> 🚀
-    </h2>
-    <Link to="/criar-conta" className="btn btn--promo-inline">
-      Comece Agora
-    </Link>
-  </div>
-  <p className="promo__subtitle">
-    A plataforma global dos nossos produtos digitais exclusivos — E-books, cursos e serviços premium com acesso imediato em qualquer lugar do mundo.
-  </p>
-</section>
-
       {/* HERO */}
       <main>
         <section className="hero">
           <div className="container hero__grid">
-            {/* Texto */}
             <div className="hero__content">
               <p className="eyebrow">UMA PLATAFORMA. POTENCIAL ILIMITADO.</p>
               <h1 className="hero__title">
@@ -150,7 +123,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Gatilhos rápidos */}
               <ul className="trust">
                 <li>⭐️ 4,9/5 por clientes reais</li>
                 <li>⚡ Acesso imediato pós-pagamento</li>
@@ -159,7 +131,6 @@ export default function Home() {
               </ul>
             </div>
 
-            {/* Colagem de pessoas felizes */}
             <aside className="collage">
               <div className="collage__grid">
                 <img
@@ -336,8 +307,7 @@ export default function Home() {
       <footer className="footer">
         <div className="container footer__inner">
           <small>
-            © {new Date().getFullYear()} MyGlobyX. Todos os direitos
-            reservados.
+            © {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.
           </small>
           <div className="footer__links">
             <Link to="/termos">Termos</Link>
