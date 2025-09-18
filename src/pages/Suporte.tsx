@@ -30,10 +30,10 @@ export default function Suporte() {
             />
           </Link>
           <nav className="nav">
-            <Link className="link" to="/app">
+            <Link className="btn btn--ghost" to="/app">
               Mundo Digital
             </Link>
-            <Link className="link" to="/app/meus-produtos">
+            <Link className="btn btn--ghost" to="/app/meus-produtos">
               Meus Produtos
             </Link>
             <button className="btn btn--outline" onClick={handleLogout}>
