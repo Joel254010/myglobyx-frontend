@@ -16,7 +16,7 @@ export default function Suporte() {
     logoutLocal();
     navigate("/", { replace: true });
   }
-  
+
 
   return (
     <div className="page">
@@ -43,7 +43,7 @@ export default function Suporte() {
       {/* Hero */}
       <section className="how-hero">
         <div className="container how-hero__content">
-          <h1>Suporte</h1>
+          <h1>Central de Suporte 🚀</h1>
           <p>
             Precisa de ajuda com acesso, pagamento ou conteúdo? Veja as respostas
             abaixo ou fale conosco.
