@@ -1,3 +1,4 @@
+// src/pages/CriarConta.tsx
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiSignup } from "../lib/api";
@@ -85,7 +86,6 @@ export default function CriarConta() {
           "Conta criada! Enviamos um e-mail de confirmação. Verifique sua caixa de entrada (e Spam/Promoções).",
       });
 
-      // Opcional: redirecionar ao login após alguns segundos
       setTimeout(() => {
         nav("/login?possignup=1", { replace: true });
       }, 1500);
@@ -106,9 +106,15 @@ export default function CriarConta() {
       {/* Header */}
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">MYGLOBYX</Link>
+          <Link className="brand__logo" to="/" aria-label="Voltar para Home">
+            <img
+              src="/logo-mx.png"
+              alt="MyGlobyX"
+              style={{ height: 40, width: "auto" }}
+            />
+          </Link>
           <nav className="nav">
-            <Link className="link" to="/como-funciona">Como funciona</Link>
+            <Link className="btn btn--ghost" to="/como-funciona">Como funciona</Link>
             <Link className="btn btn--ghost" to="/login">Entrar</Link>
           </nav>
         </div>
