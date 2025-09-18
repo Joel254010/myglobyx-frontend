@@ -1,5 +1,4 @@
-// src/pages/MeusProdutos.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 type Produto = {
@@ -7,38 +6,57 @@ type Produto = {
   type: "ebook" | "curso" | "premium";
   title: string;
   desc: string;
-  action: string; // Baixar / Assistir / Entrar
+  action: string;
   url?: string;
 };
 
-const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 const ENTITLEMENTS_KEY = "mx_entitlements";
-
-function carregarEntitlements(): Produto[] {
-  try {
-    const raw = localStorage.getItem(ENTITLEMENTS_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw) as Produto[];
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
-}
-
-function logoutLocal() {
-  TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
-  // Opcional: limpar entitlements ao sair
-  // localStorage.removeItem(ENTITLEMENTS_KEY);
-}
+const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
 export default function MeusProdutos() {
   const navigate = useNavigate();
-  const items = carregarEntitlements();
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+
+  function logoutLocal() {
+    TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem(ENTITLEMENTS_KEY);
+  }
 
   function handleLogout() {
     logoutLocal();
     navigate("/", { replace: true });
   }
+
+  useEffect(() => {
+    async function fetchMeusProdutos() {
+      try {
+        const res = await fetch("/api/me/products");
+        const data = await res.json();
+
+        const convertidos: Produto[] = (data?.products ?? []).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          desc: p.desc,
+          url: p.url ?? undefined,
+          type: p.type ?? "premium", // fallback
+          action:
+            p.type === "ebook"
+              ? "Baixar"
+              : p.type === "curso"
+              ? "Assistir"
+              : "Acessar",
+        }));
+
+        // Salva localmente para sessões futuras
+        localStorage.setItem(ENTITLEMENTS_KEY, JSON.stringify(convertidos));
+        setProdutos(convertidos);
+      } catch (err) {
+        console.error("Erro ao carregar produtos:", err);
+      }
+    }
+
+    fetchMeusProdutos();
+  }, []);
 
   return (
     <div className="page">
@@ -78,7 +96,7 @@ export default function MeusProdutos() {
             </div>
           </div>
 
-          {items.length === 0 ? (
+          {produtos.length === 0 ? (
             <div className="empty" style={{ padding: "18px 0" }}>
               <p className="muted">
                 Você ainda não tem produtos liberados. Explore o{" "}
@@ -90,7 +108,7 @@ export default function MeusProdutos() {
             </div>
           ) : (
             <div className="grid" style={{ marginTop: 12 }}>
-              {items.map((p) => (
+              {produtos.map((p) => (
                 <article key={p.id} className="card">
                   <span className="tag">
                     {p.type === "ebook"
