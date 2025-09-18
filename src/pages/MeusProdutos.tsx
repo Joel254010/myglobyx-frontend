@@ -1,3 +1,4 @@
+// src/pages/MeusProdutos.tsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -44,21 +45,36 @@ export default function MeusProdutos() {
       {/* Header */}
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">MYGLOBYX</Link>
+          <Link className="brand__logo" to="/" aria-label="Voltar para Home">
+            <img
+              src="/logo-mx.png"
+              alt="MyGlobyX"
+              style={{ height: "40px", width: "auto" }}
+            />
+          </Link>
           <nav className="nav">
-            <Link className="link" to="/app">Mundo Digital</Link>
-            <Link className="link" to="/suporte">Suporte</Link>
-            <button className="btn btn--outline" onClick={handleLogout}>Sair</button>
+            <Link className="btn btn--ghost" to="/app">
+              Mundo Digital
+            </Link>
+            <Link className="btn btn--ghost" to="/suporte">
+              Suporte
+            </Link>
+            <button className="btn btn--outline" onClick={handleLogout}>
+              Sair
+            </button>
           </nav>
         </div>
       </header>
 
+      {/* Conteúdo principal */}
       <section className="app">
         <div className="container">
           <div className="app__top">
             <div>
               <h1>Meus Produtos</h1>
-              <p className="muted">Aqui ficam apenas os produtos que você comprou e foram liberados.</p>
+              <p className="muted">
+                Aqui ficam apenas os produtos que você comprou e foram liberados.
+              </p>
             </div>
           </div>
 
@@ -66,7 +82,10 @@ export default function MeusProdutos() {
             <div className="empty" style={{ padding: "18px 0" }}>
               <p className="muted">
                 Você ainda não tem produtos liberados. Explore o{" "}
-                <Link className="link" to="/app">Mundo Digital</Link> e confira os destaques.
+                <Link className="link" to="/app">
+                  Mundo Digital
+                </Link>{" "}
+                e confira os destaques.
               </p>
             </div>
           ) : (
@@ -74,7 +93,11 @@ export default function MeusProdutos() {
               {items.map((p) => (
                 <article key={p.id} className="card">
                   <span className="tag">
-                    {p.type === "ebook" ? "E-book" : p.type === "curso" ? "Curso" : "Premium"}
+                    {p.type === "ebook"
+                      ? "E-book"
+                      : p.type === "curso"
+                      ? "Curso"
+                      : "Premium"}
                   </span>
                   <h3>{p.title}</h3>
                   <p>{p.desc}</p>
@@ -102,7 +125,9 @@ export default function MeusProdutos() {
       {/* Footer */}
       <footer className="footer">
         <div className="container footer__inner">
-          <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
+          <small>
+            © {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.
+          </small>
           <div className="footer__links">
             <Link to="/termos">Termos</Link>
             <Link to="/privacidade">Privacidade</Link>
