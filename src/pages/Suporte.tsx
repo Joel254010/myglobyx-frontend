@@ -16,6 +16,7 @@ export default function Suporte() {
     logoutLocal();
     navigate("/", { replace: true });
   }
+  
 
   return (
     <div className="page">
