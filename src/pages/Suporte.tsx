@@ -36,9 +36,6 @@ export default function Suporte() {
             <Link className="link" to="/app/meus-produtos">
               Meus Produtos
             </Link>
-            <Link className="link" to="/suporte">
-              Suporte
-            </Link>
             <button className="btn btn--outline" onClick={handleLogout}>
               Sair
             </button>
