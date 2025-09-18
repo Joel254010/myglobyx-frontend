@@ -17,14 +17,17 @@ export default function Suporte() {
     navigate("/", { replace: true });
   }
 
-
   return (
     <div className="page">
       {/* Header */}
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">
-            MYGLOBYX
+          <Link className="brand__logo" to="/" aria-label="Voltar para Home">
+            <img
+              src="/logo-mx.png"
+              alt="MyGlobyX"
+              style={{ height: 38, width: "auto" }}
+            />
           </Link>
           <nav className="nav">
             <Link className="link" to="/app">
@@ -32,6 +35,9 @@ export default function Suporte() {
             </Link>
             <Link className="link" to="/app/meus-produtos">
               Meus Produtos
+            </Link>
+            <Link className="link" to="/suporte">
+              Suporte
             </Link>
             <button className="btn btn--outline" onClick={handleLogout}>
               Sair
@@ -43,7 +49,7 @@ export default function Suporte() {
       {/* Hero */}
       <section className="how-hero">
         <div className="container how-hero__content">
-          <h1>Central de Suporte 🚀</h1>
+          <h1>Suporte</h1>
           <p>
             Precisa de ajuda com acesso, pagamento ou conteúdo? Veja as respostas
             abaixo ou fale conosco.
