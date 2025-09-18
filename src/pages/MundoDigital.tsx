@@ -1,3 +1,4 @@
+// src/pages/MundoDigital.tsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listPublicProducts } from "../lib/api";
@@ -36,7 +37,9 @@ function resolveLandingUrl(p: any): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
-  const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const withProto = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
 
   try {
     return new URL(withProto).href;
@@ -47,11 +50,23 @@ function resolveLandingUrl(p: any): string | null {
 
 const categorias: Record<string, string[]> = {
   "Animais e Pets": ["Cães", "Gatos", "Outros Pets"],
-  "Autoconhecimento e espiritualidade": ["Meditação", "Autoajuda", "Espiritualidade"],
-  "Carreira e desenvolvimento pessoal": ["Produtividade", "Carreira", "Habilidades"],
+  "Autoconhecimento e espiritualidade": [
+    "Meditação",
+    "Autoajuda",
+    "Espiritualidade",
+  ],
+  "Carreira e desenvolvimento pessoal": [
+    "Produtividade",
+    "Carreira",
+    "Habilidades",
+  ],
   "Culinária e gastronomia": ["Receitas", "Doces", "Bebidas"],
   "Design e fotografia": ["Design Gráfico", "Fotografia", "Edição"],
-  "Educação infantil e família": ["Educação Infantil", "Família", "Parentalidade"],
+  "Educação infantil e família": [
+    "Educação Infantil",
+    "Família",
+    "Parentalidade",
+  ],
   "Engenharia e arquitetura": ["Engenharia Civil", "Arquitetura", "Urbanismo"],
   "Ensino e estudo acadêmico": ["Matemática", "Ciências", "Humanas"],
   "Finanças e negócios": ["Investimentos", "Gestão", "Empreendedorismo"],
@@ -63,7 +78,11 @@ const categorias: Record<string, string[]> = {
   "Plantas e ecologia": ["Jardinagem", "Ecologia", "Sustentabilidade"],
   "Relacionamentos": ["Casais", "Amizades", "Comunicação"],
   "Saúde e esporte": ["Saúde", "Fitness", "Nutrição"],
-  "Tecnologia e desenvolvimento de software": ["Programação", "IA", "DevOps"],
+  "Tecnologia e desenvolvimento de software": [
+    "Programação",
+    "IA",
+    "DevOps",
+  ],
   "Sem categoria": ["Outros"],
 };
 
@@ -72,9 +91,13 @@ export default function MundoDigital() {
   const [produtos, setProdutos] = React.useState<PublicProduct[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [msg, setMsg] = React.useState<string | null>(null);
-  const [userName, setUserName] = React.useState(localStorage.getItem("myglobyx_user_name") || "Usuário");
+  const [userName, setUserName] = React.useState(
+    localStorage.getItem("myglobyx_user_name") || "Usuário"
+  );
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
+  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(
+    new Set()
+  );
 
   const [filtroCategoria, setFiltroCategoria] = React.useState("");
   const [filtroSubcategoria, setFiltroSubcategoria] = React.useState("");
@@ -138,11 +161,22 @@ export default function MundoDigital() {
 
   return (
     <div className="page">
+      {/* Header */}
       <header className="header">
         <div className="container header__inner">
-          <Link className="brand__logo" to="/">MYGLOBYX</Link>
+          <Link className="brand__logo" to="/" aria-label="MyGlobyX">
+            <img
+              src="/logo-mx.png"
+              alt="MyGlobyX"
+              style={{ height: "40px", width: "auto" }}
+            />
+          </Link>
+
           <div className="admin-dropdown">
-            <button className="admin-dropdown-button" onClick={() => setMenuOpen((v) => !v)}>
+            <button
+              className="admin-dropdown-button"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
               👋 Olá, {userName}
             </button>
             {menuOpen && (
@@ -150,20 +184,36 @@ export default function MundoDigital() {
                 <Link to="/app/meus-produtos">Meus Produtos</Link>
                 <Link to="/app/meus-dados">Meus Dados</Link>
                 <Link to="/suporte">Suporte</Link>
-                <button onClick={handleLogout} className="btn btn--ghost">Sair</button>
+                <button
+                  onClick={handleLogout}
+                  className="btn btn--ghost"
+                >
+                  Sair
+                </button>
               </div>
             )}
           </div>
         </div>
       </header>
 
+      {/* Hero */}
       <section className="how-hero">
         <div className="container how-hero__content">
           <h1>Conheça o Mundo Digital da MyGlobyX</h1>
-          <p>Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.</p>
+          <p>
+            Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e
+            destaques para começar do jeito certo.
+          </p>
           <div className="hero__actions">
-            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">Ver Meus Produtos</Link>
-            <Link className="btn btn--outline btn--lg" to="/como-funciona">Como funciona</Link>
+            <Link
+              className="btn btn--primary btn--lg"
+              to="/app/meus-produtos"
+            >
+              Ver Meus Produtos
+            </Link>
+            <Link className="btn btn--outline btn--lg" to="/como-funciona">
+              Como funciona
+            </Link>
           </div>
         </div>
       </section>
