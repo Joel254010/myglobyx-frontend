@@ -197,4 +197,23 @@ export async function grantAccessToUser(email: string, productId: string) {
   return data;
 }
 
+/* ========== PRODUTOS DO USUÁRIO LOGADO ========= */
+
+export type UserProduct = {
+  id: string;
+  title: string;
+  desc?: string;
+  url?: string;
+  type: "ebook" | "curso" | "premium";
+};
+
+export async function listUserProducts(token: string): Promise<UserProduct[]> {
+  const { data } = await api.get<{ products: UserProduct[] }>("/me/products", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return data.products;
+}
+
 export default api;

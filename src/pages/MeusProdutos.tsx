@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { listUserProducts, UserProduct } from "../lib/api"; // ✅ usando a API centralizada
+
+const ENTITLEMENTS_KEY = "mx_entitlements";
+const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
 type Produto = {
   id: string;
@@ -9,9 +13,6 @@ type Produto = {
   action: string;
   url?: string;
 };
-
-const ENTITLEMENTS_KEY = "mx_entitlements";
-const TOKEN_KEYS = ["myglobyx_token", "myglobyx:token"];
 
 export default function MeusProdutos() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function MeusProdutos() {
   }
 
   useEffect(() => {
-    async function fetchMeusProdutos() {
+    async function carregarProdutos() {
       try {
         const token = getUserToken();
         if (!token) {
@@ -43,22 +44,12 @@ export default function MeusProdutos() {
           return;
         }
 
-        const res = await fetch("/api/me/products", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const produtosDoUsuario: UserProduct[] = await listUserProducts(token);
 
-        if (!res.ok) {
-          throw new Error(`Erro HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        const convertidos: Produto[] = (data?.products ?? []).map((p: any) => ({
+        const convertidos: Produto[] = produtosDoUsuario.map((p) => ({
           id: p.id,
           title: p.title,
-          desc: p.desc,
+          desc: p.desc ?? "",
           url: p.url ?? undefined,
           type: p.type ?? "premium",
           action:
@@ -76,7 +67,7 @@ export default function MeusProdutos() {
       }
     }
 
-    fetchMeusProdutos();
+    carregarProdutos();
   }, []);
 
   return (

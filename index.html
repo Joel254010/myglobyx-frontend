@@ -21,9 +21,9 @@
     <!-- App -->
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Service Worker: só registra em PRODUÇÃO -->
+    <!-- ✅ Service Worker: só registra em produção (não em localhost) -->
     <script>
-      if ('serviceWorker' in navigator && import.meta.env && import.meta.env.PROD) {
+      if ('serviceWorker' in navigator && window.location.hostname !== "localhost") {
         window.addEventListener('load', () => {
           navigator.serviceWorker
             .register('/sw.js')
