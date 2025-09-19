@@ -27,10 +27,32 @@ export default function MeusProdutos() {
     navigate("/", { replace: true });
   }
 
+  function getUserToken(): string | null {
+    return (
+      localStorage.getItem("myglobyx_token") ||
+      localStorage.getItem("myglobyx:token")
+    );
+  }
+
   useEffect(() => {
     async function fetchMeusProdutos() {
       try {
-        const res = await fetch("/api/me/products");
+        const token = getUserToken();
+        if (!token) {
+          console.warn("Token de autenticação não encontrado.");
+          return;
+        }
+
+        const res = await fetch("/api/me/products", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Erro HTTP ${res.status}`);
+        }
+
         const data = await res.json();
 
         const convertidos: Produto[] = (data?.products ?? []).map((p: any) => ({
@@ -38,7 +60,7 @@ export default function MeusProdutos() {
           title: p.title,
           desc: p.desc,
           url: p.url ?? undefined,
-          type: p.type ?? "premium", // fallback
+          type: p.type ?? "premium",
           action:
             p.type === "ebook"
               ? "Baixar"
@@ -47,7 +69,6 @@ export default function MeusProdutos() {
               : "Acessar",
         }));
 
-        // Salva localmente para sessões futuras
         localStorage.setItem(ENTITLEMENTS_KEY, JSON.stringify(convertidos));
         setProdutos(convertidos);
       } catch (err) {
