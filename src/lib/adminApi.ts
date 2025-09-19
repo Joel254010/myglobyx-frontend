@@ -140,10 +140,12 @@ export type AdminProduct = {
   subcategoria?: string;      // ✅ subcategoria
   landingPageUrl?: string;    // ✅ página de destino
   price?: number;
-  tipo?: "ebook" | "curso" | "serviço"; // ✅ novo campo
+  tipo?: "ebook" | "curso" | "servico"; // ✅ corrigido: sem acento
   active: boolean;
   createdAt: string;
   updatedAt?: string;
+  aulas?: { titulo: string; capa?: string; link: string }[];
+  instrucoes?: string;
 };
 
 export async function listProducts(): Promise<AdminProduct[]> {

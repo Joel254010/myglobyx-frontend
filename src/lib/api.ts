@@ -173,6 +173,11 @@ export type AdminProduct = {
   subcategoria?: string;
   price?: number;
   active: boolean;
+  tipo?: "ebook" | "curso" | "servico"; // 🔥 corrigido
+  landingPageUrl?: string;
+  mediaUrl?: string;       // ebooks
+  aulas?: Aula[];          // cursos
+  instrucoes?: string;     // serviços
 };
 
 export async function listPublicProducts(): Promise<AdminProduct[]> {
@@ -198,13 +203,18 @@ export async function grantAccessToUser(email: string, productId: string) {
 }
 
 /* ========== PRODUTOS DO USUÁRIO LOGADO ========= */
+export type Aula = { titulo: string; capa?: string; link: string };
 
 export type UserProduct = {
   id: string;
   title: string;
   desc?: string;
-  url?: string;
-  type: "ebook" | "curso" | "premium";
+  url?: string;                  // usado p/ curso ou landing
+  type: "ebook" | "curso" | "servico"; // 🔥 alinhado
+  thumbnail?: string;
+  mediaUrl?: string;             // ebooks
+  aulas?: Aula[];                // cursos
+  instrucoes?: string;           // serviços
 };
 
 export async function listUserProducts(token: string): Promise<UserProduct[]> {

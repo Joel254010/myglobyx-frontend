@@ -6,7 +6,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-} from "../../lib/adminApi";
+} from "../../lib/adminApi"; // ⚡ corrigido para adminApi
 
 const categorias: Record<string, string[]> = {
   "Animais e Pets": ["Cães", "Gatos", "Outros Pets"],
@@ -30,10 +30,10 @@ const categorias: Record<string, string[]> = {
   "Sem categoria": ["Outros"],
 };
 
-const tiposProduto = [
+const tiposProduto: { value: "ebook" | "curso" | "servico"; label: string }[] = [
   { value: "ebook", label: "E-book" },
   { value: "curso", label: "Curso (YouTube)" },
-  { value: "serviço", label: "Serviço" },
+  { value: "servico", label: "Serviço" },
 ];
 
 export default function AdminProducts() {
@@ -42,9 +42,11 @@ export default function AdminProducts() {
   const [msg, setMsg] = React.useState<string | null>(null);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [expandedMap, setExpandedMap] = React.useState<Record<string, boolean>>({});
-  const [aulas, setAulas] = React.useState<{ titulo: string; capa: string; link: string }[]>([]);
+  const [aulas, setAulas] = React.useState<{ titulo: string; capa?: string; link: string }[]>([]);
 
-  const [form, setForm] = React.useState<Partial<AdminProduct & { instrucoes?: string }>>({
+  const [form, setForm] = React.useState<
+    Partial<AdminProduct & { instrucoes?: string; tipo: "ebook" | "curso" | "servico" }>
+  >({
     title: "",
     description: "",
     mediaUrl: "",
@@ -94,7 +96,7 @@ export default function AdminProducts() {
       ...form,
       price: form.price ? Number(form.price) : undefined,
       aulas,
-    } as AdminProduct & { aulas?: typeof aulas; instrucoes?: string };
+    } as AdminProduct & { aulas?: typeof aulas; instrucoes?: string; tipo: "ebook" | "curso" | "servico" };
 
     try {
       if (editingId) {
@@ -167,23 +169,40 @@ export default function AdminProducts() {
         </h3>
 
         <div className="form-grid">
+          {/* Título */}
           <div className="field field--full">
             <label>Título</label>
-            <input className="input" value={form.title || ""} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+            <input
+              className="input"
+              value={form.title || ""}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            />
           </div>
 
+          {/* Descrição */}
           <div className="field field--full">
             <label>Descrição</label>
-            <textarea className="input" rows={3} value={form.description || ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+            <textarea
+              className="input"
+              rows={3}
+              value={form.description || ""}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
           </div>
 
+          {/* Ebook */}
           {form.tipo === "ebook" && (
             <div className="field field--full">
               <label>URL do conteúdo</label>
-              <input className="input" value={form.mediaUrl || ""} onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))} />
+              <input
+                className="input"
+                value={form.mediaUrl || ""}
+                onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))}
+              />
             </div>
           )}
 
+          {/* Curso */}
           {form.tipo === "curso" && (
             <div className="field field--full">
               <label>Aulas do Curso</label>
@@ -210,69 +229,131 @@ export default function AdminProducts() {
                     onChange={(e) => updateAula(i, "link", e.target.value)}
                     style={{ marginBottom: 6 }}
                   />
-                  <button type="button" className="btn btn--outline" onClick={() => removeAula(i)}>Remover</button>
+                  <button type="button" className="btn btn--outline" onClick={() => removeAula(i)}>
+                    Remover
+                  </button>
                 </div>
               ))}
-              <button type="button" className="btn btn--ghost" onClick={addAula}>+ Adicionar Aula</button>
+              <button type="button" className="btn btn--ghost" onClick={addAula}>
+                + Adicionar Aula
+              </button>
             </div>
           )}
 
-          {form.tipo === "serviço" && (
+          {/* Serviço */}
+          {form.tipo === "servico" && (
             <div className="field field--full">
               <label>Instruções sobre o serviço</label>
-              <textarea className="input" rows={3} value={form.instrucoes || ""} onChange={(e) => setForm((f) => ({ ...f, instrucoes: e.target.value }))} />
+              <textarea
+                className="input"
+                rows={3}
+                value={form.instrucoes || ""}
+                onChange={(e) => setForm((f) => ({ ...f, instrucoes: e.target.value }))}
+              />
             </div>
           )}
 
+          {/* Thumbnail */}
           <div className="field field--full">
             <label>Thumbnail</label>
-            <input className="input" value={form.thumbnail || ""} onChange={(e) => setForm((f) => ({ ...f, thumbnail: e.target.value }))} />
-            {form.thumbnail && <img src={form.thumbnail} alt="Prévia" style={{ maxWidth: 200, marginTop: 8 }} />}
+            <input
+              className="input"
+              value={form.thumbnail || ""}
+              onChange={(e) => setForm((f) => ({ ...f, thumbnail: e.target.value }))}
+            />
+            {form.thumbnail && (
+              <img src={form.thumbnail} alt="Prévia" style={{ maxWidth: 200, marginTop: 8 }} />
+            )}
           </div>
 
+          {/* Landing Page */}
           <div className="field field--full">
             <label>Landing Page</label>
-            <input className="input" value={form.landingPageUrl || ""} onChange={(e) => setForm((f) => ({ ...f, landingPageUrl: e.target.value }))} />
+            <input
+              className="input"
+              value={form.landingPageUrl || ""}
+              onChange={(e) => setForm((f) => ({ ...f, landingPageUrl: e.target.value }))}
+            />
           </div>
 
+          {/* Categoria */}
           <div className="field">
             <label>Categoria</label>
-            <select className="input" value={form.categoria || ""} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value, subcategoria: "" }))}>
+            <select
+              className="input"
+              value={form.categoria || ""}
+              onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value, subcategoria: "" }))}
+            >
               <option value="">Selecione</option>
               {Object.keys(categorias).map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
 
+          {/* Subcategoria */}
           <div className="field">
             <label>Subcategoria</label>
-            <select className="input" value={form.subcategoria || ""} onChange={(e) => setForm((f) => ({ ...f, subcategoria: e.target.value }))} disabled={!form.categoria}>
+            <select
+              className="input"
+              value={form.subcategoria || ""}
+              onChange={(e) => setForm((f) => ({ ...f, subcategoria: e.target.value }))}
+              disabled={!form.categoria}
+            >
               <option value="">Selecione</option>
-              {form.categoria && categorias[form.categoria]?.map((sub) => (
-                <option key={sub} value={sub}>{sub}</option>
-              ))}
+              {form.categoria &&
+                categorias[form.categoria]?.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
             </select>
           </div>
 
+          {/* Tipo */}
           <div className="field">
             <label>Tipo de Produto</label>
-            <select className="input" value={form.tipo || ""} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as "ebook" | "curso" | "serviço" }))}>
+            <select
+              className="input"
+              value={form.tipo || ""}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  tipo: e.target.value as "ebook" | "curso" | "servico",
+                }))
+              }
+            >
               <option value="">Selecione</option>
               {tiposProduto.map((tp) => (
-                <option key={tp.value} value={tp.value}>{tp.label}</option>
+                <option key={tp.value} value={tp.value}>
+                  {tp.label}
+                </option>
               ))}
             </select>
           </div>
 
+          {/* Preço */}
           <div className="field">
             <label>Preço</label>
-            <input className="input" type="number" step="0.01" value={form.price as any || ""} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value as any }))} />
+            <input
+              className="input"
+              type="number"
+              step="0.01"
+              value={(form.price as any) || ""}
+              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value as any }))}
+            />
           </div>
 
+          {/* Status */}
           <div className="field">
             <label>Status</label>
-            <select className="input" value={form.active ? "1" : "0"} onChange={(e) => setForm((f) => ({ ...f, active: e.target.value === "1" }))}>
+            <select
+              className="input"
+              value={form.active ? "1" : "0"}
+              onChange={(e) => setForm((f) => ({ ...f, active: e.target.value === "1" }))}
+            >
               <option value="1">Ativo</option>
               <option value="0">Inativo</option>
             </select>
@@ -286,6 +367,7 @@ export default function AdminProducts() {
         </div>
       </form>
 
+      {/* Lista */}
       {loading ? (
         <div>Carregando…</div>
       ) : (
@@ -327,7 +409,11 @@ export default function AdminProducts() {
                     <button
                       className="btn btn--ghost"
                       onClick={() => {
-                        setForm({ ...p, instrucoes: (p as any).instrucoes });
+                        setForm({
+                          ...(p as AdminProduct),
+                          instrucoes: (p as any).instrucoes || "",
+                          tipo: (p as any).tipo as "ebook" | "curso" | "servico",
+                        });
                         setAulas((p as any).aulas || []);
                         setEditingId(p.id);
                         window.scrollTo({ top: 0, behavior: "smooth" });
