@@ -1,4 +1,3 @@
-// src/pages/MeusProdutos.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listUserProducts, UserProduct } from "../lib/api";
@@ -152,7 +151,13 @@ export default function MeusProdutos() {
 
                     {/* E-book */}
                     {p.type === "ebook" && p.mediaUrl && (
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <a
                           className="btn btn--primary"
                           href={p.mediaUrl}
@@ -174,15 +179,43 @@ export default function MeusProdutos() {
                     )}
 
                     {/* Curso */}
-                    {p.type === "curso" && (p.url || p.landingPageUrl) && (
-                      <a
-                        className="btn btn--primary"
-                        href={p.landingPageUrl || p.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {getAcessoLabel(p)}
-                      </a>
+                    {p.type === "curso" && (
+                      <div className="box-aulas">
+                        {p.aulas && p.aulas.length > 0 ? (
+                          <details>
+                            <summary className="btn btn--primary">
+                              {getAcessoLabel(p)}
+                            </summary>
+                            <ul style={{ marginTop: 8 }}>
+                              {p.aulas.map((aula, i) => (
+                                <li key={i} style={{ marginBottom: 6 }}>
+                                  <a
+                                    href={aula.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="link"
+                                  >
+                                    ▶ {aula.titulo || `Aula ${i + 1}`}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        ) : p.landingPageUrl || p.url ? (
+                          <a
+                            className="btn btn--primary"
+                            href={p.landingPageUrl || p.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Acessar Curso
+                          </a>
+                        ) : (
+                          <button className="btn btn--primary" disabled>
+                            {getAcessoLabel(p)}
+                          </button>
+                        )}
+                      </div>
                     )}
 
                     {/* Serviço */}
@@ -198,13 +231,6 @@ export default function MeusProdutos() {
                         </details>
                       </div>
                     ) : null}
-
-                    {/* Caso não tenha URL/media */}
-                    {!p.url && !p.mediaUrl && p.type !== "servico" && (
-                      <button className="btn btn--primary" disabled>
-                        {getAcessoLabel(p)}
-                      </button>
-                    )}
                   </div>
                 </article>
               ))}
