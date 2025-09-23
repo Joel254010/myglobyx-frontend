@@ -1,3 +1,4 @@
+// src/pages/MeusProdutos.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listUserProducts, UserProduct } from "../lib/api";
@@ -188,12 +189,33 @@ export default function MeusProdutos() {
                             </summary>
                             <ul style={{ marginTop: 8 }}>
                               {p.aulas.map((aula, i) => (
-                                <li key={i} style={{ marginBottom: 6 }}>
+                                <li
+                                  key={i}
+                                  style={{
+                                    marginBottom: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  {aula.capa && (
+                                    <img
+                                      src={aula.capa}
+                                      alt={aula.titulo || `Aula ${i + 1}`}
+                                      style={{
+                                        width: "80px",
+                                        height: "50px",
+                                        objectFit: "cover",
+                                        borderRadius: "6px",
+                                      }}
+                                    />
+                                  )}
                                   <a
                                     href={aula.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="link"
+                                    style={{ flex: 1 }}
                                   >
                                     ▶ {aula.titulo || `Aula ${i + 1}`}
                                   </a>
