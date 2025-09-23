@@ -1,3 +1,4 @@
+// src/pages/MeusProdutos.tsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listUserProducts, UserProduct } from "../lib/api";
@@ -54,7 +55,7 @@ export default function MeusProdutos() {
         return "Ler agora";
       case "curso":
         return "Assistir";
-      case "servico": // ✅ sem acento
+      case "servico":
         return "Ver instruções";
       default:
         return "Acessar";
@@ -151,21 +152,32 @@ export default function MeusProdutos() {
 
                     {/* E-book */}
                     {p.type === "ebook" && p.mediaUrl && (
-                      <a
-                        className="btn btn--primary"
-                        href={p.mediaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {getAcessoLabel(p)}
-                      </a>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <a
+                          className="btn btn--primary"
+                          href={p.mediaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {getAcessoLabel(p)}
+                        </a>
+                        <a
+                          className="btn btn--outline"
+                          href={p.mediaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                        >
+                          Download
+                        </a>
+                      </div>
                     )}
 
                     {/* Curso */}
-                    {p.type === "curso" && p.url && (
+                    {p.type === "curso" && (p.url || p.landingPageUrl) && (
                       <a
                         className="btn btn--primary"
-                        href={p.url}
+                        href={p.landingPageUrl || p.url}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

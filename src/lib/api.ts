@@ -163,6 +163,8 @@ export async function apiAdminPing(token: string): Promise<AdminPingResponse> {
 }
 
 /* ========== PRODUTOS PÚBLICOS ========= */
+export type Aula = { titulo: string; capa?: string; link: string };
+
 export type AdminProduct = {
   id: string;
   title: string;
@@ -173,7 +175,7 @@ export type AdminProduct = {
   subcategoria?: string;
   price?: number;
   active: boolean;
-  tipo?: "ebook" | "curso" | "servico"; // 🔥 corrigido
+  tipo?: "ebook" | "curso" | "servico";
   landingPageUrl?: string;
   mediaUrl?: string;       // ebooks
   aulas?: Aula[];          // cursos
@@ -203,18 +205,17 @@ export async function grantAccessToUser(email: string, productId: string) {
 }
 
 /* ========== PRODUTOS DO USUÁRIO LOGADO ========= */
-export type Aula = { titulo: string; capa?: string; link: string };
-
 export type UserProduct = {
   id: string;
   title: string;
   desc?: string;
-  url?: string;                  // usado p/ curso ou landing
-  type: "ebook" | "curso" | "servico"; // 🔥 alinhado
+  url?: string;                  
+  type: "ebook" | "curso" | "servico";
   thumbnail?: string;
-  mediaUrl?: string;             // ebooks
-  aulas?: Aula[];                // cursos
-  instrucoes?: string;           // serviços
+  mediaUrl?: string;             
+  aulas?: Aula[];                
+  instrucoes?: string;           
+  landingPageUrl?: string;       // 🔥 adicionado para alinhar com AdminProduct
 };
 
 export async function listUserProducts(token: string): Promise<UserProduct[]> {
