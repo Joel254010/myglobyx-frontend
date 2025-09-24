@@ -45,7 +45,7 @@ export default function AdminProducts() {
   const [aulas, setAulas] = React.useState<{ titulo: string; capa?: string; link: string }[]>([]);
 
   const [form, setForm] = React.useState<
-    Partial<AdminProduct & { instrucoes?: string; tipo: "ebook" | "curso" | "servico" }>
+    Partial<AdminProduct & { instrucoes?: string; tipo: "ebook" | "curso" | "servico"; checkoutUrl?: string }>
   >({
     title: "",
     description: "",
@@ -57,6 +57,7 @@ export default function AdminProducts() {
     price: undefined,
     active: true,
     landingPageUrl: "",
+    checkoutUrl: "",   // ✅ novo campo
     instrucoes: "",
   });
 
@@ -96,7 +97,7 @@ export default function AdminProducts() {
       ...form,
       price: form.price ? Number(form.price) : undefined,
       aulas,
-    } as AdminProduct & { aulas?: typeof aulas; instrucoes?: string; tipo: "ebook" | "curso" | "servico" };
+    } as AdminProduct & { aulas?: typeof aulas; instrucoes?: string; tipo: "ebook" | "curso" | "servico"; checkoutUrl?: string };
 
     try {
       if (editingId) {
@@ -118,6 +119,7 @@ export default function AdminProducts() {
         price: undefined,
         active: true,
         landingPageUrl: "",
+        checkoutUrl: "",   // reset
         instrucoes: "",
       });
       setAulas([]);
@@ -276,6 +278,16 @@ export default function AdminProducts() {
             />
           </div>
 
+          {/* Checkout Appmax */}
+          <div className="field field--full">
+            <label>Link de Checkout (Appmax)</label>
+            <input
+              className="input"
+              value={form.checkoutUrl || ""}
+              onChange={(e) => setForm((f) => ({ ...f, checkoutUrl: e.target.value }))}
+            />
+          </div>
+
           {/* Categoria */}
           <div className="field">
             <label>Categoria</label>
@@ -401,6 +413,9 @@ export default function AdminProducts() {
                     {p.landingPageUrl && (
                       <p>🌐 <a href={p.landingPageUrl} target="_blank" rel="noreferrer">Landing Page</a></p>
                     )}
+                    {p.checkoutUrl && (
+                      <p>🛒 <a href={p.checkoutUrl} target="_blank" rel="noreferrer">Checkout</a></p>
+                    )}
                     <span className={`badge ${p.active ? "badge--ok" : "badge--warn"}`}>
                       {p.active ? "Ativo" : "Inativo"}
                     </span>
@@ -413,6 +428,7 @@ export default function AdminProducts() {
                           ...(p as AdminProduct),
                           instrucoes: (p as any).instrucoes || "",
                           tipo: (p as any).tipo as "ebook" | "curso" | "servico",
+                          checkoutUrl: (p as any).checkoutUrl || "",
                         });
                         setAulas((p as any).aulas || []);
                         setEditingId(p.id);

@@ -139,6 +139,7 @@ export type AdminProduct = {
   categoria?: string;         // ✅ categoria
   subcategoria?: string;      // ✅ subcategoria
   landingPageUrl?: string;    // ✅ página de destino
+  checkoutUrl?: string;       // ✅ link direto para o checkout (Appmax)
   price?: number;
   tipo?: "ebook" | "curso" | "servico"; // ✅ corrigido: sem acento
   active: boolean;
