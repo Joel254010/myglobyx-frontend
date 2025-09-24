@@ -160,18 +160,65 @@ export default function MundoDigital() {
       </header>
 
       {/* Hero */}
-      {/* ... conteúdo hero e steps igual ao seu ... */}
+      <section className="how-hero">
+        <div className="container how-hero__content">
+          <h1>Conheça o Mundo Digital da MyGlobyX</h1>
+          <p>Bem-vindo! Aqui você encontra trilhas, conteúdos de introdução e destaques para começar do jeito certo.</p>
+          <div className="hero__actions">
+            <Link className="btn btn--primary btn--lg" to="/app/meus-produtos">Ver Meus Produtos</Link>
+            <Link className="btn btn--outline btn--lg" to="/como-funciona">Como funciona</Link>
+          </div>
+        </div>
+      </section>
 
+      {/* Steps */}
+      <section className="steps">
+        <div className="container">
+          <h2>Primeiros passos</h2>
+          <div className="steps__grid">
+            <div className="step"><div className="step__num">1</div><h3>Entenda a plataforma</h3><p>Leia o guia "Como funciona" e veja onde acessar seus produtos.</p><Link className="btn btn--ghost" to="/como-funciona">Abrir guia</Link></div>
+            <div className="step"><div className="step__num">2</div><h3>Explore destaques</h3><p>Veja novidades e conteúdos recomendados para você.</p><a className="btn btn--ghost" href="#destaques">Ver destaques</a></div>
+            <div className="step"><div className="step__num">3</div><h3>Compre e acesse</h3><p>Pague via Appmax e tenha acesso liberado automaticamente.</p><Link className="btn btn--ghost" to="/app/meus-produtos">Ir para Meus Produtos</Link></div>
+            <div className="step"><div className="step__num">4</div><h3>Precisa de ajuda?</h3><p>Conte com nosso suporte humano para qualquer dúvida.</p><Link className="btn btn--ghost" to="/suporte">Falar com suporte</Link></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Produtos */}
       <section id="destaques" className="app">
         <div className="container">
           <h2>Destaques</h2>
 
           {/* Filtros */}
-          {/* ... filtros igual ao seu ... */}
+          <div className="filtros" style={{ marginBottom: 24 }}>
+            <h3>Navegue pelos Produtos do Mundo Digital</h3>
+            <p>Filtre por categoria ou subcategoria e encontre o que mais combina com você.</p>
+            <select
+              className="input"
+              value={filtroCategoria}
+              onChange={(e) => { setFiltroCategoria(e.target.value); setFiltroSubcategoria(""); }}
+              style={{ marginRight: 12 }}
+            >
+              <option value="">Todas as categorias</option>
+              {Object.keys(categorias).map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <select
+              className="input"
+              value={filtroSubcategoria}
+              onChange={(e) => setFiltroSubcategoria(e.target.value)}
+              disabled={!filtroCategoria}
+            >
+              <option value="">Todas as subcategorias</option>
+              {filtroCategoria && categorias[filtroCategoria]?.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+          </div>
 
           {msg && <div className="alert alert--err">{msg}</div>}
           {loading && <p>Carregando produtos...</p>}
-
           {!loading && produtosFiltrados.length === 0 && (
             <p className="muted">Nenhum produto encontrado para os filtros selecionados.</p>
           )}
@@ -192,12 +239,16 @@ export default function MundoDigital() {
                     <h3>{p.title}</h3>
                     {p.description && (
                       <>
-                        <p className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}>
-                          {expandedIds.has(p.id)
-                            ? p.description
-                            : p.description.split(" ").slice(0, 20).join(" ") +
-                              (p.description.split(" ").length > 20 ? "..." : "")}
-                        </p>
+                        <p
+                          className={expandedIds.has(p.id) ? "desc expandida" : "desc cortada"}
+                          dangerouslySetInnerHTML={{
+                            __html: (expandedIds.has(p.id)
+                              ? p.description
+                              : p.description.split(" ").slice(0, 20).join(" ") +
+                                (p.description.split(" ").length > 20 ? "..." : "")
+                            ).replace(/\n/g, "<br />"),
+                          }}
+                        />
                         <button className="ver-mais" onClick={() => toggleExpand(p.id)}>
                           {expandedIds.has(p.id) ? "Ver menos" : "Ver mais"}
                         </button>
@@ -209,33 +260,15 @@ export default function MundoDigital() {
                   </div>
                   <div className="acoes-produto">
                     {url ? (
-                      <a
-                        className="btn btn--primary"
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Saiba mais
-                      </a>
+                      <a className="btn btn--primary" href={url} target="_blank" rel="noopener noreferrer">Saiba mais</a>
                     ) : (
-                      <button className="btn btn--primary" disabled title="Sem link disponível">
-                        Saiba mais
-                      </button>
+                      <button className="btn btn--primary" disabled title="Sem link disponível">Saiba mais</button>
                     )}
 
                     {checkout ? (
-                      <a
-                        className="btn btn--outline"
-                        href={checkout}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Comprar
-                      </a>
+                      <a className="btn btn--outline" href={checkout} target="_blank" rel="noopener noreferrer">Comprar</a>
                     ) : (
-                      <button className="btn btn--outline" disabled title="Sem checkout disponível">
-                        Comprar
-                      </button>
+                      <button className="btn btn--outline" disabled title="Sem checkout disponível">Comprar</button>
                     )}
                   </div>
                 </article>
@@ -245,6 +278,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
+      {/* CTA */}
       <section className="cta">
         <div className="container cta__box">
           <h3>Quando você comprar, o acesso é imediato</h3>
@@ -256,6 +290,7 @@ export default function MundoDigital() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="footer">
         <div className="container footer__inner">
           <small>© {new Date().getFullYear()} MyGlobyX. Todos os direitos reservados.</small>
