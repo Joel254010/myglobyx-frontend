@@ -1,4 +1,3 @@
-// src/lib/api.ts
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 /* ========== BASE URL DINÂMICA ========= */
@@ -68,6 +67,7 @@ export type AuthResponse = {
 
 export type SignupResponse = Partial<AuthResponse> & { message?: string };
 
+// ✅ Corrigido: rota agora é apenas "/register"
 export async function apiRegister(
   name: string,
   email: string,
@@ -76,7 +76,7 @@ export async function apiRegister(
 ): Promise<SignupResponse> {
   const payload: any = { name, email, password };
   if (phone) payload.phone = phone;
-  const { data } = await api.post<SignupResponse>("/auth/register", payload);
+  const { data } = await api.post<SignupResponse>("/register", payload);
   return data;
 }
 
@@ -177,9 +177,9 @@ export type AdminProduct = {
   active: boolean;
   tipo?: "ebook" | "curso" | "servico";
   landingPageUrl?: string;
-  mediaUrl?: string;       // ebooks
-  aulas?: Aula[];          // cursos
-  instrucoes?: string;     // serviços
+  mediaUrl?: string; // ebooks
+  aulas?: Aula[]; // cursos
+  instrucoes?: string; // serviços
 };
 
 export async function listPublicProducts(): Promise<AdminProduct[]> {
@@ -209,20 +209,18 @@ export type UserProduct = {
   id: string;
   title: string;
   desc?: string;
-  url?: string;                  
+  url?: string;
   type: "ebook" | "curso" | "servico";
   thumbnail?: string;
-  mediaUrl?: string;             
-  aulas?: Aula[];                
-  instrucoes?: string;           
-  landingPageUrl?: string;       // 🔥 adicionado para alinhar com AdminProduct
+  mediaUrl?: string;
+  aulas?: Aula[];
+  instrucoes?: string;
+  landingPageUrl?: string;
 };
 
 export async function listUserProducts(token: string): Promise<UserProduct[]> {
   const { data } = await api.get<{ products: UserProduct[] }>("/me/products", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
   return data.products;
 }
